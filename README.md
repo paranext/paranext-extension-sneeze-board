@@ -1,19 +1,18 @@
-# paranext-extension-template
-Basic extension template for Paranext
+# paranext-extension-sneeze-board
+Example Paranext extension to display a Sneeze Board
 
 ## Summary
 
-This is a Vite project template pre-configured to build Paranext extensions.
+This is a sample Paranext extension project: Sneeze Board to track team members' work-related sneezes.
 
  - `lib` contains the source code for the extension
-   - `lib/main.ts` is the main entry file for the extension
-   - `*.web-view.tsx` files will be treated as React WebViews
-   - `*.web-view.ejs` files will be treated as HTML WebViews
+   - `lib/main.ts` is the main entry file for the Sneeze Board extension
+   - `sneeze-board.web-view.tsx` file defines a React WebView that Paranext displays
  - `public` contains static files that are transferred to the build folder
    - `public/manifest.json` is the manifest file that defines the extension
    - `public/package.json` defines the npm package for this extension and is required for Paranext to use it appropriately
-   - `public/paranext-extension-template.d.ts` is this extension's types file that other extensions can use
- - `dist` is a generated folder containing your built extension files
+   - `public/paranext-extension-sneeze-board.d.ts` is this extension's types file that other extensions can use
+ - `dist` is a generated folder containing the built extension files
 
 ## To install
 
@@ -50,7 +49,7 @@ To build the extension once:
 
 ## Vite Build Explanation
 
-This extension template is built by Vite in two steps: a WebView transpilation step and a packaging step:
+This extension sneeze-board is built by Vite in two steps: a WebView transpilation step and a packaging step:
 
 ## Build 1: TypeScript WebView transpilation
 

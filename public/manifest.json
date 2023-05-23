@@ -1,9 +1,9 @@
 {
-  "name": "paranext-extension-template",
+  "name": "paranext-extension-sneeze-board",
   "version": "0.0.1",
-  "description": "Extension template for Paranext. Powered by Vite",
-  "author": "Paranext",
+  "description": "Example Paranext extension to display a sneeze board",
+  "author": "Rolf Heij and Katherine Jensen",
   "license": "MIT",
-  "main": "paranext-extension-template.ts",
+  "main": "paranext-extension-sneeze-board.ts",
   "activationEvents": []
 }

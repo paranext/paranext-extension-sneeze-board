@@ -61,7 +61,7 @@ const extensionConfig = defineConfig(async () => {
         entry: path.resolve(__dirname, "../lib/main.ts"),
         // The output file name for the extension (file extension is appended)
         fileName: (moduleFormat, entryName) =>
-          `paranext-extension-template.${getFileExtensionByModuleFormat(
+          `paranext-extension-sneeze-board.${getFileExtensionByModuleFormat(
             moduleFormat
           )}`,
         // Output to cjs format as that's what Paranext supports

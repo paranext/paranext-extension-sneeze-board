@@ -17,9 +17,9 @@
     "jsx": "react-jsx",
     "types": ["papi-dts"],
     "paths": {
-      "extension-types": ["./public/paranext-extension-template"]
+      "extension-types": ["./public/paranext-extension-sneeze-board"]
     }
   },
-  "include": ["lib", "public/paranext-extension-template.d.ts"],
+  "include": ["lib", "public/paranext-extension-sneeze-board.d.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
