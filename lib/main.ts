@@ -1,178 +1,135 @@
-import papi from "papi";
-import IDataProviderEngine from "shared/models/data-provider-engine.model";
+import papi from 'papi';
+import { UnsubscriberAsync } from 'shared/utils/papi-util';
+import type IDataProviderEngine from 'shared/models/data-provider-engine.model';
 // @ts-expect-error ts(1192) this file has no default export; the text is exported by rollup
-import extensionTemplateReact from "./extension-template.web-view";
-import extensionTemplateReactStyles from "./extension-template.web-view.scss?inline";
-// @ts-expect-error ts(1192) this file has no default export; the text is exported by rollup
-import extensionTemplateHtml from "./extension-template-html.web-view.ejs";
-import type { WebViewContentType } from "shared/data/web-view.model";
+import sneezeBoardReactWebView from './sneeze-board.web-view';
+import styles from './sneeze-board.web-view.scss?inline';
+
+// TODO: Update the json file with the latest date from Darren (xml that needs to be run through a
+// json converter online and have accessors renamed to userId, date, and comment)
+import blessYouData from './sneeze-board.data.json';
 
 const { logger } = papi;
+logger.info('Sneeze Board is importing!');
 
-console.log(import.meta.env.PROD);
+const unsubscribers: UnsubscriberAsync[] = [];
 
-logger.info("Extension template is importing!");
-
-const unsubscribers = [];
-
-type QuickVerseSetData = string | { text: string; isHeresy: boolean };
-
-class QuickVerseDataProviderEngine
-  implements IDataProviderEngine<string, string | undefined, QuickVerseSetData>
+// TODO: Change date to have a Date type once JSON gets parsed to a Date type
+export type SerializedSneeze = { userId: string; date: string; comment?: string };
+export type Sneeze = SerializedSneeze & { sneezeId: number };
+export type User = { userId: string; name: string; color: string };
+class AchYouDataProviderEngine
+  implements IDataProviderEngine<string | number | Date, Sneeze[] | User[], Sneeze | User>
 {
-  /**
-   * Verses stored by the Data Provider.
-   * Keys are Scripture References.
-   * Values are { text: '<verse_text>', isChanged?: boolean }
-   */
-  verses: { [scrRef: string]: { text: string; isChanged?: boolean } } = {};
-
-  /** Latest updated verse reference */
-  latestVerseRef = "john 11:35";
-
-  // Note: this method does not have to be provided here for it to work properly because it is layered over on the papi.
-  // But because we provide it here, we must return `true` to notify like in the set method.
-  // The contents of this method run before the update is emitted.
-  // TODO: What will actually happen if we run this in `get`? Stack overflow?
-  notifyUpdate() {
-    logger.info(
-      `Quick verse notifyUpdate! latestVerseRef = ${this.latestVerseRef}`
-    );
-    return true;
+  sneezes: Sneeze[];
+  startOfCountdown: number;
+  users: User[];
+  constructor() {
+    this.startOfCountdown = +blessYouData.CountdownStart;
+    this.sneezes = blessYouData.Sneezes.map((s, i) => {
+      return { sneezeId: this.startOfCountdown - i, ...s };
+    });
+    this.users = blessYouData.Users;
   }
 
   /**
-   * @param selector Scripture reference
-   * @param data { text: '<verse_text>', isHeresy: true } Must inform us that you are a heretic
+   * @param selector string userId of user who just sneezed or number sneezeId of sneeze that
+   *  needs editing
+   * @param data date and any comments associated with the sneeze
    */
-  // Note: this method gets layered over so that you can run `this.set` in the data provider engine, and it will notify update afterward.
-  async set(selector: string, data: QuickVerseSetData) {
-    // Just get notifications of updates with the 'notify' selector. Nothing to change
-    if (selector === "notify") return false;
-
-    // You can't change scripture from just a string. You have to tell us you're a heretic
-    if (typeof data === "string" || data instanceof String) return false;
-
-    // Only heretics change Scripture, so you have to tell us you're a heretic
-    if (!data.isHeresy) return false;
-
-    // If there is no change in the verse text, don't update
-    if (data.text === this.verses[this.#getSelector(selector)].text)
-      return false;
-
-    // Update the verse text, track the latest change, and send an update
-    this.verses[this.#getSelector(selector)] = {
-      text: data.text,
-      isChanged: true,
-    };
-    if (selector !== "latest")
-      this.latestVerseRef = this.#getSelector(selector);
-    return true;
-  }
-
-  /**
-   * Example of layering over set inside a data provider. This updates the verse text and sends an update event
-   * @param verseRef verse reference to change
-   * @param verseText text to update the verse to, you heretic
-   */
-  async setHeresy(verseRef: string, verseText: string) {
-    return this.set(verseRef, { text: verseText, isHeresy: true });
-  }
-
-  /**
-   * @param selector
-   */
-  get = async (selector: string) => {
-    // Just get notifications of updates with the 'notify' selector
-    if (selector === "notify") return undefined;
-
-    let responseVerse = this.verses[this.#getSelector(selector)];
-
-    // If we don't already have the verse cached, cache it
-    if (!responseVerse) {
-      // Fetch the verse, cache it, and return it
-      try {
-        const verseResponse = await papi.fetch(
-          `https://bible-api.com/${encodeURIComponent(
-            this.#getSelector(selector)
-          )}`
-        );
-        const verseData = await verseResponse.json();
-        const text = verseData.text.replaceAll("\n", "");
-        responseVerse = { text };
-        this.verses[this.#getSelector(selector)] = responseVerse;
-        // Cache the verse text, track the latest cached verse, and send an update
-        if (selector !== "latest")
-          this.latestVerseRef = this.#getSelector(selector);
-        this.notifyUpdate();
-      } catch (e) {
-        responseVerse = {
-          text: `Failed to fetch ${selector} from bible-api! Reason: ${e}`,
-        };
-      }
+  // Note: this method gets layered over so that you can run `this.set` in the data provider engine,
+  // and it will notify update afterward.
+  async set(selector: string | number, data: Sneeze | User) {
+    if (selector === 'NEWUSER') {
+      logger.log('About to push new user');
+      logger.log(`data.name: ${(data as User).name}`);
+      this.users.push(data as User);
+    }
+    // Setting a sneeze by userId means that user just sneezed a new sneeze so add it to the data
+    else if (typeof selector === 'string') this.sneezes.push(data as Sneeze);
+    // Selecting a sneeze by sneezeId means you are updating an existing sneeze, right now you can
+    // only update a sneeze comment. No rewriting history by changing dates :)
+    if (typeof selector === 'number') {
+      this.sneezes = this.sneezes.map((s) =>
+        s.sneezeId === selector ? { ...s, comment: (data as Sneeze).comment } : s,
+      );
     }
 
-    return responseVerse.text;
-  };
+    return true;
+  }
 
   /**
-   * Valid selectors:
-   * - `'notify'` - informs the listener of any changes in quick verse text but does not carry data
-   * - `'latest'` - the latest-updated quick verse text including pulling a verse from the server and a heretic changing the verse
-   * - Scripture Reference strings. Ex: `'Romans 1:16'`
-   * @param selector selector provided by user
-   * @returns selector for use internally
+   * @param selector string user id or number sneezeId or Date date
    */
-  #getSelector(selector: string) {
-    const selectorL = selector.toLowerCase();
-    return selectorL === "latest" ? this.latestVerseRef : selectorL;
-  }
+  get = async (selector: string | number | Date) => {
+    // logger.log('Sneeze get');
+    if (!selector) return [];
+    if (selector === '*') return this.sneezes;
+    if (selector === 'users') return this.users;
+    if (typeof selector === 'string')
+      // Handle all string selectors so it can be assumed the following selectors are of type SneezeBoardData
+      return this.sneezes.filter((sneeze) => {
+        return selector === sneeze.userId;
+      });
+
+    // TODO: Come back and parse Json date into the date type instead of type string and make this sortable by day, month, year etc.
+    // if (selector.date && typeOf date === 'Date')
+    //   return this.sneezes.filter((sneeze) => {
+    //     return selector.date === sneeze.date;
+    //   });
+    if (typeof selector === 'number') {
+      return this.sneezes.filter((sneeze) => {
+        return selector === sneeze.sneezeId;
+      });
+    }
+    return [];
+  };
 }
 
 export async function activate() {
-  logger.info("Extension template is activating!");
+  logger.info('Sneeze Board is activating!');
 
-  const quickVerseDataProviderInfoPromise = papi.dataProvider.registerEngine(
-    "paranext-extension-template.quick-verse",
-    new QuickVerseDataProviderEngine()
+  const sneezeDataProvider = await papi.dataProvider.registerEngine(
+    'sneeze-board.sneezes',
+    new AchYouDataProviderEngine(),
   );
 
+  await papi.webViews.addWebView({
+    id: 'Sneeze Board',
+    title: 'Sneeze Board React',
+    content: sneezeBoardReactWebView,
+    styles,
+  });
+
   const unsubPromises = [
-    papi.commands.registerCommand(
-      "extension-template.do-stuff",
-      (message: string) => {
-        return `The template did stuff! ${message}`;
-      }
-    ),
+    papi.commands.registerCommand('sneeze-board.get-sneezes', () => {
+      return sneezeDataProvider.get('*');
+    }),
   ];
 
-  papi.webViews.addWebView({
-    id: 'Extension template WebView React',
-    content: extensionTemplateReact,
-    styles: extensionTemplateReactStyles,
-  });
-  
-  papi.webViews.addWebView({
-    id: 'Extension template WebView HTML',
-    contentType: 'html' as WebViewContentType.HTML,
-    content: extensionTemplateHtml,
-  });
+  if (sneezeDataProvider) {
+    // Test subscribing to a data provider
+    const unsubGreetings = await sneezeDataProvider.subscribe(
+      'c897cd73-9100-4e6a-8a32-fe237f1e9928',
+      (timSneeze: Sneeze[] | User[]) =>
+        logger.info(
+          `Tim sneezed the ${(timSneeze as Sneeze[])[timSneeze.length - 1].sneezeId} sneeze`,
+        ),
+    );
 
-  // For now, let's just make things easy and await the data provider promise at the end so we don't hold everything else up
-  const quickVerseDataProviderInfo = await quickVerseDataProviderInfoPromise;
+    unsubscribers.push(unsubGreetings);
+  }
 
-  return Promise.all(
-    unsubPromises.map((unsubPromise) => unsubPromise.promise)
-  ).then(() => {
-    logger.info("Extension template is finished activating!");
+  return Promise.all(unsubPromises.map((unsubPromise) => unsubPromise.promise)).then(() => {
+    logger.info('Sneeze Board is finished activating!');
     return papi.util.aggregateUnsubscriberAsyncs(
       unsubPromises
         .map((unsubPromise) => unsubPromise.unsubscriber)
-        .concat([quickVerseDataProviderInfo.dispose])
+        .concat([sneezeDataProvider.dispose]),
     );
   });
 }
 
 export async function deactivate() {
-  logger.info("Extension template is deactivating!");
+  return Promise.all(unsubscribers.map((unsubscriber) => unsubscriber()));
 }
