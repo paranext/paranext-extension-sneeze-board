@@ -1,6 +1,7 @@
 import papi from 'papi';
 import { UnsubscriberAsync } from 'shared/utils/papi-util';
 import type IDataProviderEngine from 'shared/models/data-provider-engine.model';
+import { AchYouDataTypes } from 'extension-types';
 // @ts-expect-error ts(1192) this file has no default export; the text is exported by rollup
 import sneezeBoardReactWebView from './sneeze-board.web-view';
 import styles from './sneeze-board.web-view.scss?inline';
@@ -19,7 +20,7 @@ export type SerializedSneeze = { userId: string; date: string; comment?: string 
 export type Sneeze = SerializedSneeze & { sneezeId: number };
 export type User = { userId: string; name: string; color: string };
 class AchYouDataProviderEngine
-  implements IDataProviderEngine<string | number | Date, Sneeze[] | User[], Sneeze | User>
+  implements IDataProviderEngine<AchYouDataTypes>
 {
   sneezes: Sneeze[];
   startOfCountdown: number;
@@ -39,7 +40,7 @@ class AchYouDataProviderEngine
    */
   // Note: this method gets layered over so that you can run `this.set` in the data provider engine,
   // and it will notify update afterward.
-  async set(selector: string | number, data: Sneeze | User) {
+  async setAchYou(selector: string | number, data: Sneeze | User) {
     if (selector === 'NEWUSER') {
       logger.log('About to push new user');
       logger.log(`data.name: ${(data as User).name}`);
@@ -61,7 +62,7 @@ class AchYouDataProviderEngine
   /**
    * @param selector string user id or number sneezeId or Date date
    */
-  get = async (selector: string | number | Date) => {
+  getAchYou = async (selector: string | number | Date) => {
     // logger.log('Sneeze get');
     if (!selector) return [];
     if (selector === '*') return this.sneezes;
@@ -109,7 +110,7 @@ export async function activate() {
 
   if (sneezeDataProvider) {
     // Test subscribing to a data provider
-    const unsubGreetings = await sneezeDataProvider.subscribe(
+    const unsubGreetings = await sneezeDataProvider.subscribeAchYou(
       'c897cd73-9100-4e6a-8a32-fe237f1e9928',
       (timSneeze: Sneeze[] | User[]) =>
         logger.info(
