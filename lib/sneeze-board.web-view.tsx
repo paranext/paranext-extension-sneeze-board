@@ -20,15 +20,15 @@ globalThis.webViewComponent = function SneezeBoard() {
   const [newUserName, setNewUserName] = useState<string>('');
   const [newUserColor, setNewUserColor] = useState<string>('#00FFEE');
 
-  const [sneezes, , isLoading] = useData.AchYou<AchYouDataTypes['AchYou']>(
+  const [sneezes, , isLoading] = useData.AchYou<AchYouDataTypes, 'AchYou'>(
     'sneeze-board.sneezes',
     '*',
     [],
   );
 
-  const [users] = useData.AchYou<AchYouDataTypes['AchYou']>('sneeze-board.sneezes', 'users', []);
+  const [users] = useData.AchYou<AchYouDataTypes, 'AchYou'>('sneeze-board.sneezes', 'users', []);
   // TODO: not sure how to actually get other extensions' types yet paranext-core#69
-  const [verse] = useData.Verse<QuickVerseDataTypes['Verse']>(
+  const [verse] = useData.Verse<QuickVerseDataTypes, 'Verse'>(
     'quick-verse.quick-verse',
     '2 Kings 4:35',
     'Verse has not loaded yet',
