@@ -1,4 +1,5 @@
 import papi from 'papi';
+import type { ExecutionToken } from 'node/models/execution-token.model';
 import { UnsubscriberAsync } from 'shared/utils/papi-util';
 import type IDataProviderEngine from 'shared/models/data-provider-engine.model';
 import { AchYouDataTypes } from 'extension-types';
@@ -9,8 +10,10 @@ import styles from './sneeze-board.web-view.scss?inline';
 // TODO: Update the json file with the latest date from Darren (xml that needs to be run through a
 // json converter online and have accessors renamed to userId, date, and comment)
 import blessYouData from './sneeze-board.data.json';
+import { ExecutionActivationContext } from 'extension-host/extension-types/extension-activation-context.model';
 
-const { logger } = papi;
+const { logger, 
+dataProvider: { DataProviderEngine }, } = papi;
 logger.info('Sneeze Board is importing!');
 
 const unsubscribers: UnsubscriberAsync[] = [];
@@ -19,13 +22,17 @@ const unsubscribers: UnsubscriberAsync[] = [];
 export type SerializedSneeze = { userId: string; date: string; comment?: string };
 export type Sneeze = SerializedSneeze & { sneezeId: number };
 export type User = { userId: string; name: string; color: string };
+
 class AchYouDataProviderEngine
+  extends DataProviderEngine<AchYouDataTypes>
   implements IDataProviderEngine<AchYouDataTypes>
 {
   sneezes: Sneeze[];
   startOfCountdown: number;
   users: User[];
   constructor() {
+    super();
+
     this.startOfCountdown = +blessYouData.CountdownStart;
     this.sneezes = blessYouData.Sneezes.map((s, i) => {
       return { sneezeId: this.startOfCountdown - i, ...s };
@@ -34,20 +41,16 @@ class AchYouDataProviderEngine
   }
 
   /**
-   * @param selector string userId of user who just sneezed or number sneezeId of sneeze that
-   *  needs editing
+   * @param selector string userId of user who just sneezed a new sneeze or 
+   *  number sneezeId of sneeze that needs editing
    * @param data date and any comments associated with the sneeze
    */
   // Note: this method gets layered over so that you can run `this.set` in the data provider engine,
   // and it will notify update afterward.
-  async setAchYou(selector: string | number, data: Sneeze | User) {
-    if (selector === 'NEWUSER') {
-      logger.log('About to push new user');
-      logger.log(`data.name: ${(data as User).name}`);
-      this.users.push(data as User);
-    }
+  async setSneeze(selector: string | number | Date, data: Sneeze) {
+    // Note: a sneeze can be gotten by date but not set by date so we don't have a case for that
     // Setting a sneeze by userId means that user just sneezed a new sneeze so add it to the data
-    else if (typeof selector === 'string') this.sneezes.push(data as Sneeze);
+    if (typeof selector === 'string') this.sneezes.push(data as Sneeze);
     // Selecting a sneeze by sneezeId means you are updating an existing sneeze, right now you can
     // only update a sneeze comment. No rewriting history by changing dates :)
     if (typeof selector === 'number') {
@@ -60,13 +63,28 @@ class AchYouDataProviderEngine
   }
 
   /**
+   * @param selector string userId of new user
+   * @param data date and any comments associated with the sneeze
+   */
+  // Note: this method gets layered over so that you can run `this.set` in the data provider engine,
+  // and it will notify update afterward.
+  async setUser(selector: string, data: User) {
+    if (selector === 'NEWUSER') {
+      logger.log('About to push new user');
+      logger.log(`data.name: ${(data as User).name}`);
+      this.users.push(data as User);
+    }
+
+    return true;
+  }
+
+  /**
    * @param selector string user id or number sneezeId or Date date
    */
-  getAchYou = async (selector: string | number | Date) => {
+  getSneeze = async (selector: string | number | Date) => {
     // logger.log('Sneeze get');
     if (!selector) return [];
     if (selector === '*') return this.sneezes;
-    if (selector === 'users') return this.users;
     if (typeof selector === 'string')
       // Handle all string selectors so it can be assumed the following selectors are of type SneezeBoardData
       return this.sneezes.filter((sneeze) => {
@@ -85,15 +103,24 @@ class AchYouDataProviderEngine
     }
     return [];
   };
+
+  /**
+   * @param selector string user id or general selector
+   */
+  getUser = async (selector: string) => {
+    if (!selector) return [];
+    else if (selector === '*') return this.users;
+    else if (typeof selector === 'string') {
+      return this.users.filter((user) => {
+        return selector === user.userId;
+      });
+    }
+    return [];
+  }
 }
 
-export async function activate() {
+export async function activate(context: ExecutionActivationContext) {
   logger.info('Sneeze Board is activating!');
-
-  const sneezeDataProvider = await papi.dataProvider.registerEngine(
-    'sneeze-board.sneezes',
-    new AchYouDataProviderEngine(),
-  );
 
   await papi.webViews.addWebView({
     id: 'Sneeze Board',
@@ -102,33 +129,41 @@ export async function activate() {
     styles,
   });
 
-  const unsubPromises = [
-    papi.commands.registerCommand('sneeze-board.get-sneezes', () => {
-      return sneezeDataProvider.get('*');
-    }),
-  ];
+  const unsubPromises: Promise<UnsubscriberAsync>[] = [];
+
+  const engine = new AchYouDataProviderEngine();
+
+  const sneezeDataProvider = await papi.dataProvider.registerEngine<AchYouDataTypes>(
+    'sneeze-board.sneezes',
+    engine,
+  );
 
   if (sneezeDataProvider) {
     // Test subscribing to a data provider
-    const unsubGreetings = await sneezeDataProvider.subscribeAchYou(
+    const unsubGreetings = await sneezeDataProvider.subscribeSneeze(
       'c897cd73-9100-4e6a-8a32-fe237f1e9928',
-      (timSneeze: Sneeze[] | User[]) =>
+      (timSneeze: Sneeze[]) =>
         logger.info(
-          `Tim sneezed the ${(timSneeze as Sneeze[])[timSneeze.length - 1].sneezeId} sneeze`,
+          `Tim sneezed the ${(timSneeze)[timSneeze.length - 1].sneezeId} sneeze`,
         ),
     );
-
     unsubscribers.push(unsubGreetings);
   }
 
-  return Promise.all(unsubPromises.map((unsubPromise) => unsubPromise.promise)).then(() => {
-    logger.info('Sneeze Board is finished activating!');
-    return papi.util.aggregateUnsubscriberAsyncs(
-      unsubPromises
-        .map((unsubPromise) => unsubPromise.unsubscriber)
-        .concat([sneezeDataProvider.dispose]),
-    );
-  });
+  const combinedUnsubscriber: UnsubscriberAsync = papi.util.aggregateUnsubscriberAsyncs(
+    (await Promise.all(unsubPromises)).concat([sneezeDataProvider.dispose]),
+  );
+  logger.info('The Sneeze Board is finished activating!');
+  return combinedUnsubscriber;
+  
+  // return Promise.all(unsubPromises.map((unsubPromise) => unsubPromise.promise)).then(() => {
+  //   logger.info('Sneeze Board is finished activating!');
+  //   return papi.util.aggregateUnsubscriberAsyncs(
+  //     unsubPromises
+  //       .map((unsubPromise) => unsubPromise.unsubscriber)
+  //       .concat([sneezeDataProvider.dispose]),
+  //   );
+  // });
 }
 
 export async function deactivate() {

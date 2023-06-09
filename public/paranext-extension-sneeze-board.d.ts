@@ -10,11 +10,8 @@ export type Sneeze = SerializedSneeze & { sneezeId: number };
 export type User = { userId: string; name: string; color: string };
 
 export type AchYouDataTypes = {
-  AchYou: DataProviderDataType<
-    string | number | Date,
-    Sneeze[] | User[],
-    Sneeze | User
-  >;
+  Sneeze: DataProviderDataType<string | number | Date, Sneeze[], Sneeze>;
+  User: DataProviderDataType<string, User[], User>;
 };
 
 /**
@@ -26,4 +23,4 @@ export type AchYouDataTypes = {
  * SetData: string type is userId and will set a new sneeze,
  *  number type is sneezeId and will update an existing sneeze
  */
-export interface AchYouDataProvider extends IDataProvider<AchYouDataTypes> {}
+export type AchYouDataProvider = IDataProvider<AchYouDataTypes>;

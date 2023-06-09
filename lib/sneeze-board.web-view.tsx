@@ -1,10 +1,10 @@
 ﻿import papi from 'papi';
 import { ChangeEvent, SyntheticEvent, useState } from 'react';
 import { AchYouDataProvider, AchYouDataTypes, Sneeze } from 'extension-types';
+import { Button, ComboBox, TextField } from 'papi-components';
 
 const {
   react: {
-    components: { Button, ComboBox, TextField },
     hooks: { useData, useDataProvider },
   },
   logger,
@@ -20,19 +20,20 @@ globalThis.webViewComponent = function SneezeBoard() {
   const [newUserName, setNewUserName] = useState<string>('');
   const [newUserColor, setNewUserColor] = useState<string>('#00FFEE');
 
-  const [sneezes, , isLoading] = useData.AchYou<AchYouDataTypes, 'AchYou'>(
+  const [sneezes, , isLoading] = useData.Sneeze<AchYouDataTypes, 'Sneeze'>(
     'sneeze-board.sneezes',
     '*',
     [],
   );
 
-  const [users] = useData.AchYou<AchYouDataTypes, 'AchYou'>('sneeze-board.sneezes', 'users', []);
+  const [users] = useData.User<AchYouDataTypes, 'User'>('sneeze-board.sneezes', '*', []);
   // TODO: not sure how to actually get other extensions' types yet paranext-core#69
   const [verse] = useData.Verse<QuickVerseDataTypes, 'Verse'>(
     'quick-verse.quick-verse',
     '2 Kings 4:35',
     'Verse has not loaded yet',
   );
+
   const names: string[] = [];
   const userIds: { [userId: string]: string } = {};
   const userColor: { [userId: string]: string } = {};
@@ -85,7 +86,7 @@ globalThis.webViewComponent = function SneezeBoard() {
       .toString()
       .padStart(2, '0')}.${currentDate.getMilliseconds().toString().padStart(3, '0')}`;
 
-    dataProvider?.setAchYou(userId, {
+    dataProvider?.setSneeze(userId, {
       sneezeId: sneezes[sneezes.length - 1].sneezeId - 1,
       userId,
       date: formattedDate,
@@ -161,7 +162,7 @@ globalThis.webViewComponent = function SneezeBoard() {
       return;
     }
 
-    dataProvider?.setAchYou('NEWUSER', {
+    dataProvider?.setUser('NEWUSER', {
       userId: 'thisShouldBeUniqueButIsNotRightNow',
       name: newUserName,
       color: newUserColor,
