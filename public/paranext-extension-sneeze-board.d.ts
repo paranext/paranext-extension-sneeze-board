@@ -1,8 +1,21 @@
-import type IDataProvider from 'shared/models/data-provider.interface';
+import type { DataProviderDataType } from "shared/models/data-provider.model";
+import type IDataProvider from "shared/models/data-provider.interface";
 
-export type SerializedSneeze = { userId: string; date: string; comment?: string };
+export type SerializedSneeze = {
+  userId: string;
+  date: string;
+  comment?: string;
+};
 export type Sneeze = SerializedSneeze & { sneezeId: number };
 export type User = { userId: string; name: string; color: string };
+
+export type AchYouDataTypes = {
+  AchYou: DataProviderDataType<
+    string | number | Date,
+    Sneeze[] | User[],
+    Sneeze | User
+  >;
+};
 
 /**
  * Selector: '*' will select all sneezes, 'users' will select all users, a string userId will
@@ -13,5 +26,4 @@ export type User = { userId: string; name: string; color: string };
  * SetData: string type is userId and will set a new sneeze,
  *  number type is sneezeId and will update an existing sneeze
  */
-export interface AchYouDataProvider
-  extends IDataProvider<string | number | Date, Sneeze[] | User[], Sneeze | User> {}
+export interface AchYouDataProvider extends IDataProvider<AchYouDataTypes> {}
