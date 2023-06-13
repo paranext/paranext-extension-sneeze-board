@@ -2,9 +2,10 @@ import papi from 'papi';
 import { UnsubscriberAsync } from 'shared/utils/papi-util';
 import type IDataProviderEngine from 'shared/models/data-provider-engine.model';
 // @ts-expect-error ts(1192) this file has no default export; the text is exported by rollup
-import sneezeBoardReactWebView from './sneeze-board.web-view';
+import sneezeBoardWebView from './sneeze-board.web-view';
 import styles from './sneeze-board.web-view.scss?inline';
-
+import type { IWebViewProvider } from 'shared/models/web-view-provider.model';
+import type { SavedWebViewDefinition, WebViewDefinition } from 'shared/data/web-view.model';
 // TODO: Update the json file with the latest date from Darren (xml that needs to be run through a
 // json converter online and have accessors renamed to userId, date, and comment)
 import blessYouData from './sneeze-board.data.json';
@@ -86,48 +87,80 @@ class AchYouDataProviderEngine
   };
 }
 
+const sneezeBoardWebViewType = "sneeze-board.sneeze-board";
+
+/**
+ * Simple web view provider that provides Sneeze Board web views when papi requests them
+ */
+const sneezeBoardWebViewProvider: IWebViewProvider = {
+  async getWebView(
+    savedWebView: SavedWebViewDefinition
+  ): Promise<WebViewDefinition | undefined> {
+    if (savedWebView.webViewType !== sneezeBoardWebViewType)
+      throw new Error(
+        `${sneezeBoardWebViewType} provider received request to provide a ${savedWebView.webViewType} web view`
+      );
+    return {
+      ...savedWebView,
+      title: "Sneeze Board",
+      content: sneezeBoardWebView,
+      styles,
+    };
+  },
+};
+
 export async function activate() {
-  logger.info('Sneeze Board is activating!');
+  logger.info("Sneeze Board is activating!");
 
   const sneezeDataProvider = await papi.dataProvider.registerEngine(
-    'sneeze-board.sneezes',
-    new AchYouDataProviderEngine(),
+    "sneeze-board.sneezes",
+    new AchYouDataProviderEngine()
   );
 
-  await papi.webViews.addWebView({
-    id: 'Sneeze Board',
-    title: 'Sneeze Board React',
-    content: sneezeBoardReactWebView,
-    styles,
-  });
+  const sneezeBoardWebViewProviderPromise = papi.webViews.registerWebViewProvider(
+    sneezeBoardWebViewType,
+    sneezeBoardWebViewProvider
+  );
+
+  // Create a webview or get an existing webview if one already exists for this type
+  // Note: here, we are using `existingId: '?'` to indicate we do not want to create a new webview
+  // if one already exists. The webview that already exists could have been created by anyone
+  // anywhere; it just has to match `webViewType`.
+  papi.webViews.getWebView(sneezeBoardWebViewType, undefined, { existingId: "?" });
 
   const unsubPromises = [
-    papi.commands.registerCommand('sneeze-board.get-sneezes', () => {
-      return sneezeDataProvider.get('*');
+    papi.commands.registerCommand("sneeze-board.get-sneezes", () => {
+      return sneezeDataProvider.get("*");
     }),
   ];
 
   if (sneezeDataProvider) {
     // Test subscribing to a data provider
     const unsubGreetings = await sneezeDataProvider.subscribe(
-      'c897cd73-9100-4e6a-8a32-fe237f1e9928',
+      "c897cd73-9100-4e6a-8a32-fe237f1e9928",
       (timSneeze: Sneeze[] | User[]) =>
         logger.info(
-          `Tim sneezed the ${(timSneeze as Sneeze[])[timSneeze.length - 1].sneezeId} sneeze`,
-        ),
+          `Tim sneezed the ${
+            (timSneeze as Sneeze[])[timSneeze.length - 1].sneezeId
+          } sneeze`
+        )
     );
 
     unsubscribers.push(unsubGreetings);
   }
 
-  return Promise.all(unsubPromises.map((unsubPromise) => unsubPromise.promise)).then(() => {
-    logger.info('Sneeze Board is finished activating!');
-    return papi.util.aggregateUnsubscriberAsyncs(
-      unsubPromises
-        .map((unsubPromise) => unsubPromise.unsubscriber)
-        .concat([sneezeDataProvider.dispose]),
+  // For now, let's just make things easy and await the registration promises at the end so we don't hold everything else up
+  const sneezeBoardWebViewProviderResolved = await sneezeBoardWebViewProviderPromise;
+
+  const combinedUnsubscriber: UnsubscriberAsync =
+    papi.util.aggregateUnsubscriberAsyncs(
+      (await Promise.all(unsubPromises)).concat([
+        sneezeDataProvider.dispose,
+        sneezeBoardWebViewProviderResolved.dispose,
+      ])
     );
-  });
+  logger.info("The Sneeze Board is finished activating!");
+  return combinedUnsubscriber;
 }
 
 export async function deactivate() {
