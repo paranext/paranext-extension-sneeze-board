@@ -1,10 +1,10 @@
 ﻿import papi from 'papi';
 import { ChangeEvent, SyntheticEvent, useState } from 'react';
+import { Button, ComboBox, TextField } from 'papi-components';
 import { AchYouDataProvider, Sneeze, User } from './sneeze-board.d';
 
 const {
   react: {
-    components: { Button, ComboBox, TextField },
     hooks: { useData, useDataProvider },
   },
   logger,
