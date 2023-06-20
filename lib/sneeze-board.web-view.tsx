@@ -2,6 +2,7 @@
 import { ChangeEvent, SyntheticEvent, useState } from 'react';
 import { AchYouDataProvider, AchYouDataTypes, Sneeze } from 'extension-types';
 import { Button, ComboBox, TextField } from 'papi-components';
+import { newGuid } from 'shared/utils/util';
 
 const {
   react: {
@@ -154,16 +155,22 @@ globalThis.webViewComponent = function SneezeBoard() {
     setNewUserColor(event.target.value);
   };
 
-  const addNewUserHandler = () => {
+  const addUserHandler = () => {
     if (!newUserName || !newUserColor) {
       return;
     }
-    if (names.includes(newUserName)) {
+    if (selectedItem !== 'Select user' && names.includes(newUserName)) {
+      const userId: string = userIds[selectedItem];
+      dataProvider?.setUser(userId, {
+        userId: userId,
+        name: newUserName,
+        color: newUserColor,
+      });
       return;
     }
 
     dataProvider?.setUser('NEWUSER', {
-      userId: 'thisShouldBeUniqueButIsNotRightNow',
+      userId: newGuid(),
       name: newUserName,
       color: newUserColor,
     });
@@ -195,7 +202,7 @@ globalThis.webViewComponent = function SneezeBoard() {
           onChange={newUserColorChangeHandler}
         />
         <div style={squareStyle(newUserColor)} />
-        <Button onClick={addNewUserHandler}>Add new user</Button>
+        <Button onClick={addUserHandler}>Add new user</Button>
       </div>
       <h3>Encouraging Verse:</h3>
       <p>{`${verse} (2 Kings 4:35)`}</p>
