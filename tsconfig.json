@@ -18,7 +18,8 @@
     "types": ["papi-dts"],
     "paths": {
       "extension-types": ["./public/paranext-extension-sneeze-board"]
-    }
+    },
+    "experimentalDecorators": true
   },
   "include": ["lib", "public/paranext-extension-sneeze-board.d.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]

@@ -2,6 +2,7 @@
 import { ChangeEvent, SyntheticEvent, useState } from 'react';
 import { AchYouDataProvider, AchYouDataTypes, Sneeze } from 'extension-types';
 import { Button, ComboBox, TextField } from 'papi-components';
+import { newGuid } from 'shared/utils/util';
 
 const {
   react: {
@@ -20,19 +21,20 @@ globalThis.webViewComponent = function SneezeBoard() {
   const [newUserName, setNewUserName] = useState<string>('');
   const [newUserColor, setNewUserColor] = useState<string>('#00FFEE');
 
-  const [sneezes, , isLoading] = useData.AchYou<AchYouDataTypes, 'AchYou'>(
+  const [sneezes, , isLoading] = useData.Sneeze<AchYouDataTypes, 'Sneeze'>(
     'sneeze-board.sneezes',
     '*',
     [],
   );
 
-  const [users] = useData.AchYou<AchYouDataTypes, 'AchYou'>('sneeze-board.sneezes', 'users', []);
+  const [users] = useData.User<AchYouDataTypes, 'User'>('sneeze-board.sneezes', '*', []);
   // TODO: not sure how to actually get other extensions' types yet paranext-core#69
   const [verse] = useData.Verse<QuickVerseDataTypes, 'Verse'>(
     'quick-verse.quick-verse',
     '2 Kings 4:35',
     'Verse has not loaded yet',
   );
+
   const names: string[] = [];
   const userIds: { [userId: string]: string } = {};
   const userColor: { [userId: string]: string } = {};
@@ -85,7 +87,7 @@ globalThis.webViewComponent = function SneezeBoard() {
       .toString()
       .padStart(2, '0')}.${currentDate.getMilliseconds().toString().padStart(3, '0')}`;
 
-    dataProvider?.setAchYou(userId, {
+    dataProvider?.setSneeze(userId, {
       sneezeId: sneezes[sneezes.length - 1].sneezeId - 1,
       userId,
       date: formattedDate,
@@ -153,16 +155,22 @@ globalThis.webViewComponent = function SneezeBoard() {
     setNewUserColor(event.target.value);
   };
 
-  const addNewUserHandler = () => {
+  const addUserHandler = () => {
     if (!newUserName || !newUserColor) {
       return;
     }
-    if (names.includes(newUserName)) {
+    if (selectedItem !== 'Select user' && names.includes(newUserName)) {
+      const userId: string = userIds[selectedItem];
+      dataProvider?.setUser(userId, {
+        userId: userId,
+        name: newUserName,
+        color: newUserColor,
+      });
       return;
     }
 
-    dataProvider?.setAchYou('NEWUSER', {
-      userId: 'thisShouldBeUniqueButIsNotRightNow',
+    dataProvider?.setUser('NEWUSER', {
+      userId: newGuid(),
       name: newUserName,
       color: newUserColor,
     });
@@ -194,7 +202,7 @@ globalThis.webViewComponent = function SneezeBoard() {
           onChange={newUserColorChangeHandler}
         />
         <div style={squareStyle(newUserColor)} />
-        <Button onClick={addNewUserHandler}>Add new user</Button>
+        <Button onClick={addUserHandler}>Add new user</Button>
       </div>
       <h3>Encouraging Verse:</h3>
       <p>{`${verse} (2 Kings 4:35)`}</p>

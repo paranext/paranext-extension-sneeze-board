@@ -1,4 +1,4 @@
-import papi from 'papi';
+﻿import papi from 'papi';
 import { UnsubscriberAsync } from 'shared/utils/papi-util';
 import type IDataProviderEngine from 'shared/models/data-provider-engine.model';
 import { AchYouDataTypes } from 'extension-types';
@@ -6,12 +6,13 @@ import { AchYouDataTypes } from 'extension-types';
 import sneezeBoardWebView from './sneeze-board.web-view';
 import styles from './sneeze-board.web-view.scss?inline';
 import type { IWebViewProvider } from 'shared/models/web-view-provider.model';
-import type { SavedWebViewDefinition, WebViewDefinition } from 'shared/data/web-view.model';
+import type { SavedWebViewDefinition, WebViewContentType, WebViewDefinition } from 'shared/data/web-view.model';
 // TODO: Update the json file with the latest date from Darren (xml that needs to be run through a
 // json converter online and have accessors renamed to userId, date, and comment)
 import blessYouData from './sneeze-board.data.json';
 
-const { logger } = papi;
+const { logger, 
+dataProvider: { DataProviderEngine }, } = papi;
 logger.info('Sneeze Board is importing!');
 
 const unsubscribers: UnsubscriberAsync[] = [];
@@ -20,13 +21,17 @@ const unsubscribers: UnsubscriberAsync[] = [];
 export type SerializedSneeze = { userId: string; date: string; comment?: string };
 export type Sneeze = SerializedSneeze & { sneezeId: number };
 export type User = { userId: string; name: string; color: string };
+
 class AchYouDataProviderEngine
+  extends DataProviderEngine<AchYouDataTypes>
   implements IDataProviderEngine<AchYouDataTypes>
 {
   sneezes: Sneeze[];
   startOfCountdown: number;
   users: User[];
   constructor() {
+    super();
+
     this.startOfCountdown = +blessYouData.CountdownStart;
     this.sneezes = blessYouData.Sneezes.map((s, i) => {
       return { sneezeId: this.startOfCountdown - i, ...s };
@@ -35,25 +40,21 @@ class AchYouDataProviderEngine
   }
 
   /**
-   * @param selector string userId of user who just sneezed or number sneezeId of sneeze that
-   *  needs editing
-   * @param data date and any comments associated with the sneeze
+   * @param selector string userId of user who just sneezed a new sneeze or 
+   *  number sneezeId of sneeze that needs editing
+   * @param sneeze date and any comments associated with the sneeze
    */
   // Note: this method gets layered over so that you can run `this.set` in the data provider engine,
   // and it will notify update afterward.
-  async setAchYou(selector: string | number, data: Sneeze | User) {
-    if (selector === 'NEWUSER') {
-      logger.log('About to push new user');
-      logger.log(`data.name: ${(data as User).name}`);
-      this.users.push(data as User);
-    }
+  async setSneeze(selector: string | number | Date, sneeze: Sneeze) {
+    // Note: a sneeze can be gotten by date but not set by date so we don't have a case for that
     // Setting a sneeze by userId means that user just sneezed a new sneeze so add it to the data
-    else if (typeof selector === 'string') this.sneezes.push(data as Sneeze);
+    if (typeof selector === 'string') this.sneezes.push(sneeze);
     // Selecting a sneeze by sneezeId means you are updating an existing sneeze, right now you can
     // only update a sneeze comment. No rewriting history by changing dates :)
     if (typeof selector === 'number') {
       this.sneezes = this.sneezes.map((s) =>
-        s.sneezeId === selector ? { ...s, comment: (data as Sneeze).comment } : s,
+        s.sneezeId === selector ? { ...s, comment: sneeze.comment } : s,
       );
     }
 
@@ -61,13 +62,34 @@ class AchYouDataProviderEngine
   }
 
   /**
+   * @param selector id of existing user or generic NEWUSER string for adding a new user
+   * @param user user id, name, and color of user to add/modify
+   */
+  // Note: this method gets layered over so that you can run `this.set` in the data provider engine,
+  // and it will notify update afterward.
+  async setUser(selector: string, user: User) {
+    if (selector === 'NEWUSER') {
+      logger.log('About to push new user');
+      logger.log(`data.name: ${user.name}`);
+      this.users.push(user);
+    }
+    else if (selector && selector.trim()) {
+      this.users = this.users.map((u) =>
+        u.userId === selector ? { ...u, color: user.color } : u,
+      );
+    }
+    else return false;
+
+    return true;
+  }
+
+  /**
    * @param selector string user id or number sneezeId or Date date
    */
-  getAchYou = async (selector: string | number | Date) => {
+  getSneeze = async (selector: string | number | Date) => {
     // logger.log('Sneeze get');
     if (!selector) return [];
     if (selector === '*') return this.sneezes;
-    if (selector === 'users') return this.users;
     if (typeof selector === 'string')
       // Handle all string selectors so it can be assumed the following selectors are of type SneezeBoardData
       return this.sneezes.filter((sneeze) => {
@@ -86,10 +108,25 @@ class AchYouDataProviderEngine
     }
     return [];
   };
+
+  /**
+   * @param selector string user id or general selector
+   */
+  getUser = async (selector: string) => {
+    if (!selector) return [];
+    else if (selector === '*') return this.users;
+    else if (typeof selector === 'string') {
+      return this.users.filter((user) => {
+        return selector === user.userId;
+      });
+    }
+    return [];
+  }
 }
 
-const sneezeBoardWebViewType = "sneeze-board.sneeze-board";
+export async function activate() {
 
+  const sneezeBoardWebViewType = 'sneeze-board.react';
 /**
  * Simple web view provider that provides Sneeze Board web views when papi requests them
  */
@@ -110,7 +147,6 @@ const sneezeBoardWebViewProvider: IWebViewProvider = {
   },
 };
 
-export async function activate() {
   logger.info("Sneeze Board is activating!");
 
   const sneezeDataProvider = await papi.dataProvider.registerEngine(
@@ -120,33 +156,34 @@ export async function activate() {
 
   const sneezeBoardWebViewProviderPromise = papi.webViews.registerWebViewProvider(
     sneezeBoardWebViewType,
-    sneezeBoardWebViewProvider
+    sneezeBoardWebViewProvider,
   );
+
+  const unsubPromises = [
+    papi.commands.registerCommand("sneeze-board.get-sneezes", () => {
+      return sneezeDataProvider.getSneeze("*");
+    }),
+  ];
 
   // Create a webview or get an existing webview if one already exists for this type
   // Note: here, we are using `existingId: '?'` to indicate we do not want to create a new webview
   // if one already exists. The webview that already exists could have been created by anyone
   // anywhere; it just has to match `webViewType`.
-  papi.webViews.getWebView(sneezeBoardWebViewType, undefined, { existingId: "?" });
+  papi.webViews.getWebView(sneezeBoardWebViewType, undefined, { existingId: '?' });
 
-  const unsubPromises = [
-    papi.commands.registerCommand("sneeze-board.get-sneezes", () => {
-      return sneezeDataProvider.get("*");
-    }),
-  ];
+
 
   if (sneezeDataProvider) {
     // Test subscribing to a data provider
-    const unsubGreetings = await sneezeDataProvider.subscribeAchYou(
+    const unsubGreetings = await sneezeDataProvider.subscribeSneeze(
       "c897cd73-9100-4e6a-8a32-fe237f1e9928",
-      (timSneeze: Sneeze[] | User[]) =>
+      (timSneeze: Sneeze[]) =>
         logger.info(
           `Tim sneezed the ${
-            (timSneeze as Sneeze[])[timSneeze.length - 1].sneezeId
+            timSneeze[timSneeze.length - 1].sneezeId
           } sneeze`
         )
     );
-
     unsubscribers.push(unsubGreetings);
   }
 
