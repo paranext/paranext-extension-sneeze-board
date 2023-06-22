@@ -180,7 +180,7 @@ const sneezeBoardWebViewProvider: IWebViewProvider = {
       (timSneeze: Sneeze[]) =>
         logger.info(
           `Tim sneezed the ${
-            (timSneeze as Sneeze[])[timSneeze.length - 1].sneezeId
+            timSneeze[timSneeze.length - 1].sneezeId
           } sneeze`
         )
     );
