@@ -1,8 +1,17 @@
-﻿import papi from 'papi';
+import papi from 'papi-frontend';
 import { ChangeEvent, SyntheticEvent, useState } from 'react';
 import { AchYouDataProvider, AchYouDataTypes, Sneeze } from 'extension-types';
 import { Button, ComboBox, TextField } from 'papi-components';
-import { newGuid } from 'shared/utils/util';
+
+// TODO: fix this. This can't be imported anymore since this is an standalone extension. Does it need to move to `papi-utils`?
+// import { newGuid } from 'shared/utils/util';
+function newGuid(): string {
+  return '00-0-4-1-000'.replace(/[^-]/g, (s) =>
+    // @ts-expect-error ts(2363) this works fine
+    // eslint-disable-next-line no-bitwise
+    (((Math.random() + ~~s) * 0x10000) >> s).toString(16).padStart(4, '0'),
+  );
+}
 
 const {
   react: {

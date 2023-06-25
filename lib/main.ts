@@ -1,4 +1,4 @@
-﻿import papi from 'papi';
+import papi from 'papi-backend';
 import { UnsubscriberAsync } from 'shared/utils/papi-util';
 import type IDataProviderEngine from 'shared/models/data-provider-engine.model';
 import { AchYouDataTypes } from 'extension-types';
@@ -6,13 +6,13 @@ import { AchYouDataTypes } from 'extension-types';
 import sneezeBoardWebView from './sneeze-board.web-view';
 import styles from './sneeze-board.web-view.scss?inline';
 import type { IWebViewProvider } from 'shared/models/web-view-provider.model';
-import type { SavedWebViewDefinition, WebViewContentType, WebViewDefinition } from 'shared/data/web-view.model';
+import type { SavedWebViewDefinition, WebViewDefinition } from 'shared/data/web-view.model';
 // TODO: Update the json file with the latest date from Darren (xml that needs to be run through a
 // json converter online and have accessors renamed to userId, date, and comment)
 import blessYouData from './sneeze-board.data.json';
 
-const { logger, 
-dataProvider: { DataProviderEngine }, } = papi;
+const { logger,  dataProvider: { DataProviderEngine } } = papi;
+
 logger.info('Sneeze Board is importing!');
 
 const unsubscribers: UnsubscriberAsync[] = [];
@@ -124,9 +124,8 @@ class AchYouDataProviderEngine
   }
 }
 
-export async function activate() {
+const sneezeBoardWebViewType = 'sneeze-board.react';
 
-  const sneezeBoardWebViewType = 'sneeze-board.react';
 /**
  * Simple web view provider that provides Sneeze Board web views when papi requests them
  */
@@ -147,6 +146,7 @@ const sneezeBoardWebViewProvider: IWebViewProvider = {
   },
 };
 
+export async function activate() {
   logger.info("Sneeze Board is activating!");
 
   const sneezeDataProvider = await papi.dataProvider.registerEngine(

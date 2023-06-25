@@ -76,8 +76,8 @@ const webViewConfig = defineConfig(async ({ mode }) => {
         // Do not bundle papi because it will be imported in Paranext
         external: paranextProvidedModules,
         output: {
-          // Disable code splitting and chunks. Extension main must be a single file
-          manualChunks: () => "main",
+          // Disable code splitting and chunks. Extension WebViews must be a single file
+          manualChunks: () => "webView",
         },
       },
       // Bundle the sourcemap into the webview file since it will be injected as a string
