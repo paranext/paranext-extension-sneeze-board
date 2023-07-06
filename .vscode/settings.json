@@ -1,5 +1,8 @@
 {
-    "cSpell.words": [
-        "Paranext"
-    ]
+  "cSpell.words": ["Paranext"],
+
+  "editor.rulers": [100],
+  "editor.wordWrapColumn": 100,
+
+  "files.eol": "\n"
 }
