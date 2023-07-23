@@ -1,5 +1,5 @@
-import type { DataProviderDataType } from "shared/models/data-provider.model";
-import type IDataProvider from "shared/models/data-provider.interface";
+import type { DataProviderDataType } from 'shared/models/data-provider.model';
+import type IDataProvider from 'shared/models/data-provider.interface';
 
 export type SerializedSneeze = {
   userId: string;
@@ -24,3 +24,9 @@ export type AchYouDataTypes = {
  *  number type is sneezeId and will update an existing sneeze
  */
 export type AchYouDataProvider = IDataProvider<AchYouDataTypes>;
+
+declare module 'papi-commands' {
+  export interface CommandHandlers {
+    'sneezeBoard.getSneezes': () => Promise<Sneeze[]>;
+  }
+}
