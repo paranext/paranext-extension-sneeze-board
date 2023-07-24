@@ -3,7 +3,7 @@ import { ChangeEvent, SyntheticEvent, useState } from 'react';
 import { AchYouDataProvider, AchYouDataTypes, Sneeze } from 'extension-types';
 import { Button, ComboBox, TextField } from 'papi-components';
 
-// TODO: fix this. This can't be imported anymore since this is an standalone extension. Does it need to move to `papi-utils`?
+// TODO: fix this. This can't be imported anymore since this is a standalone extension. Does it need to move to `papi-utils`?
 // import { newGuid } from 'shared/utils/util';
 function newGuid(): string {
   return '00-0-4-1-000'.replace(/[^-]/g, (s) =>
@@ -23,7 +23,7 @@ const {
 globalThis.webViewComponent = function SneezeBoard() {
   logger.info('Preparing to display the Sneeze Board');
 
-  const dataProvider = useDataProvider<AchYouDataProvider>('sneeze-board.sneezes');
+  const dataProvider = useDataProvider<AchYouDataProvider>('sneezeBoard.sneezes');
 
   const [selectedItem, setSelectedItem] = useState<string>('Select user');
   const [comment, setComment] = useState<string>('');
@@ -31,16 +31,16 @@ globalThis.webViewComponent = function SneezeBoard() {
   const [newUserColor, setNewUserColor] = useState<string>('#00FFEE');
 
   const [sneezes, , isLoading] = useData.Sneeze<AchYouDataTypes, 'Sneeze'>(
-    'sneeze-board.sneezes',
+    'sneezeBoard.sneezes',
     '*',
     [],
   );
 
-  const [users] = useData.User<AchYouDataTypes, 'User'>('sneeze-board.sneezes', '*', []);
+  const [users] = useData.User<AchYouDataTypes, 'User'>('sneezeBoard.sneezes', '*', []);
   // TODO: not sure how to actually get other extensions' types yet paranext-core#69
   const [verse] = useData.Verse<QuickVerseDataTypes, 'Verse'>(
-    'quick-verse.quick-verse',
-    '2 Kings 4:35',
+    'quickVerse.quickVerse',
+    '2KI 4:35',
     'Verse has not loaded yet',
   );
 
