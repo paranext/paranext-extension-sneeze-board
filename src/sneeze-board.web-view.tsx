@@ -1,6 +1,6 @@
 import papi from 'papi-frontend';
 import { ChangeEvent, SyntheticEvent, useState } from 'react';
-import { AchYouDataProvider, AchYouDataTypes, Sneeze } from 'extension-types';
+import { AchYouDataProvider, AchYouDataTypes, Sneeze } from 'paranext-extension-sneeze-board';
 import { Button, ComboBox, TextField } from 'papi-components';
 
 // TODO: fix this. This can't be imported anymore since this is a standalone extension. Does it need to move to `papi-utils`?

@@ -1,9 +1,8 @@
 import papi from 'papi-backend';
 import { UnsubscriberAsync } from 'shared/utils/papi-util';
 import type IDataProviderEngine from 'shared/models/data-provider-engine.model';
-import { AchYouDataTypes } from 'extension-types';
-// @ts-expect-error ts(1192) this file has no default export; the text is exported by rollup
-import sneezeBoardWebView from './sneeze-board.web-view';
+import { AchYouDataTypes } from 'paranext-extension-sneeze-board';
+import sneezeBoardWebView from './sneeze-board.web-view?inline';
 import styles from './sneeze-board.web-view.scss?inline';
 import type { IWebViewProvider } from 'shared/models/web-view-provider.model';
 import type { SavedWebViewDefinition, WebViewDefinition } from 'shared/data/web-view.model';
