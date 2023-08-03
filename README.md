@@ -3,8 +3,7 @@ Example Paranext extension to display a Sneeze Board
 
 ## Summary
 
-This is a sample Platform.Bible extension project: Sneeze Board to track team members' work-related sneezes.
-
+This is a sample webpack Platform.Bible extension project: Sneeze Board to track team members' work-related sneezes.
 - `package.json` contains information about this extension npm package. It is required for Platform.Bible to use the extension properly. It is copied into the build folder
 - `src` contains the source code for the extension
   - `src/main.ts` is the main entry file for the Sneeze Board extension
