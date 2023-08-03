@@ -42,7 +42,7 @@ const configMain: webpack.Configuration = merge(configBase, {
   entry: {
     main: {
       import: './src/main.ts',
-      filename: 'paranext-extension-template.js',
+      filename: 'paranext-extension-sneeze-board.js',
     },
   },
   plugins: [

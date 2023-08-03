@@ -8,6 +8,7 @@ import type { SavedWebViewDefinition, WebViewDefinition } from 'shared/data/web-
 // TODO: Update the json file with the latest date from Darren (xml that needs to be run through a
 // json converter online and have accessors renamed to userId, date, and comment)
 import blessYouData from './sneeze-board.data.json';
+import { ExecutionActivationContext } from 'extension-host/extension-types/extension-activation-context.model';
 
 const {
   logger,
@@ -141,7 +142,7 @@ const sneezeBoardWebViewProvider: IWebViewProvider = {
   },
 };
 
-export async function activate() {
+export async function activate(context: ExecutionActivationContext) {
   logger.info('Sneeze Board is activating!');
 
   const sneezeDataProvider = await papi.dataProvider.registerEngine(
@@ -154,11 +155,10 @@ export async function activate() {
     sneezeBoardWebViewProvider,
   );
 
-  const unsubPromises = [
+  const getSneezesPromise =
     papi.commands.registerCommand('sneezeBoard.getSneezes', () => {
       return sneezeDataProvider.getSneeze('*');
-    }),
-  ];
+    });
 
   // Create a webview or get an existing webview if one already exists for this type
   // Note: here, we are using `existingId: '?'` to indicate we do not want to create a new webview
@@ -173,16 +173,14 @@ export async function activate() {
       (timSneeze: Sneeze[]) =>
         logger.info(`Tim sneezed the ${timSneeze[timSneeze.length - 1].sneezeId} sneeze`),
     );
-    unsubscribers.push(unsubGreetings);
+    context.registrations.add(unsubGreetings);
   }
 
   // For now, let's just make things easy and await the registration promises at the end so we don't
   // hold everything else up
-  const sneezeBoardWebViewProviderResolved = await sneezeBoardWebViewProviderPromise;
+  context.registrations.add (await sneezeBoardWebViewProviderPromise);
+  context.registrations.add (await getSneezesPromise);
+  context.registrations.add (sneezeDataProvider);
 
   logger.info('The Sneeze Board is finished activating!');
-}
-
-export async function deactivate() {
-  return Promise.all(unsubscribers.map((unsubscriber) => unsubscriber()));
 }
