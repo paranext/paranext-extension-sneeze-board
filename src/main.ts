@@ -1,5 +1,4 @@
 import papi from 'papi-backend';
-import { UnsubscriberAsync } from 'shared/utils/papi-util';
 import type IDataProviderEngine from 'shared/models/data-provider-engine.model';
 import { AchYouDataTypes } from 'paranext-extension-sneeze-board';
 import sneezeBoardWebView from './sneeze-board.web-view?inline';
@@ -16,8 +15,6 @@ const {
 } = papi;
 
 logger.info('Sneeze Board is importing!');
-
-const unsubscribers: UnsubscriberAsync[] = [];
 
 // TODO: Change date to have a Date type once JSON gets parsed to a Date type
 export type SerializedSneeze = { userId: string; date: string; comment?: string };
@@ -183,14 +180,7 @@ export async function activate() {
   // hold everything else up
   const sneezeBoardWebViewProviderResolved = await sneezeBoardWebViewProviderPromise;
 
-  const combinedUnsubscriber: UnsubscriberAsync = papi.util.aggregateUnsubscriberAsyncs(
-    (await Promise.all(unsubPromises)).concat([
-      sneezeDataProvider.dispose,
-      sneezeBoardWebViewProviderResolved.dispose,
-    ]),
-  );
   logger.info('The Sneeze Board is finished activating!');
-  return combinedUnsubscriber;
 }
 
 export async function deactivate() {
