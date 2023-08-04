@@ -176,8 +176,8 @@ export async function activate(context: ExecutionActivationContext) {
     context.registrations.add(unsubGreetings);
   }
 
-  // For now, let's just make things easy and await the registration promises at the end so we don't
-  // hold everything else up
+  // Tell PAPI all the things that need to be unsubscribed when shutting down (or otherwise
+  // removing this extension).
   context.registrations.add (await sneezeBoardWebViewProviderPromise);
   context.registrations.add (await getSneezesPromise);
   context.registrations.add (sneezeDataProvider);
