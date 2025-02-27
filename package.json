@@ -16,25 +16,25 @@
   },
   "dependencies": {
     "papi-components": "file:../paranext-core/lib/papi-components",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@types/node": "^18.17.0",
-    "@types/react": "^18.2.15",
-    "@types/react-dom": "^18.2.7",
-    "@vitejs/plugin-react": "^4.3.2",
-    "concurrently": "^8.2.2",
+    "@types/node": "^20.17.19",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
     "cross-env": "^7.0.3",
     "escape-string-regexp": "^5.0.0",
-    "glob": "^10.3.3",
+    "glob": "^10.4.5",
     "papi-dts": "file:../paranext-core/lib/papi-dts",
     "patch-package": "^7.0.2",
     "rollup-plugin-import-manager": "^0.6.4",
     "rollup-plugin-string": "^3.0.0",
-    "sass": "^1.64.1",
-    "typescript": "^5.1.6",
-    "vite": "^5.4.8"
+    "sass": "^1.85.1",
+    "typescript": "^5.4.5",
+    "vite": "^6.2.0"
   },
   "volta": {
     "node": "18.18.2"
