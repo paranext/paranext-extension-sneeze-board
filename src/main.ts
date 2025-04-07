@@ -1,20 +1,18 @@
-import papi from 'papi-backend';
-import { UnsubscriberAsync } from 'shared/utils/papi-util';
-import type IDataProviderEngine from 'shared/models/data-provider-engine.model';
-import { AchYouDataTypes } from 'extension-types';
+import papi, { DataProviderEngine, logger } from '@papi/backend';
+import type {
+  IDataProviderEngine,
+  IWebViewProvider,
+  SavedWebViewDefinition,
+  WebViewDefinition,
+} from '@papi/core';
+import { UnsubscriberAsync } from 'platform-bible-utils';
 // @ts-expect-error ts(1192) this file has no default export; the text is exported by rollup
-import sneezeBoardWebView from './sneeze-board.web-view';
-import styles from './sneeze-board.web-view.scss?inline';
-import type { IWebViewProvider } from 'shared/models/web-view-provider.model';
-import type { SavedWebViewDefinition, WebViewDefinition } from 'shared/data/web-view.model';
+import sneezeBoardWebView from './web-views/sneeze-board.web-view';
+import styles from './web-views/sneeze-board.web-view.scss?inline';
 // TODO: Update the json file with the latest date from Darren (xml that needs to be run through a
 // json converter online and have accessors renamed to userId, date, and comment)
-import blessYouData from './sneeze-board.data.json';
-
-const {
-  logger,
-  dataProvider: { DataProviderEngine },
-} = papi;
+import blessYouData from '../public/assets/sneeze-board.data.json';
+import { AchYouDataTypes } from './types/paranext-extension-sneeze-board';
 
 logger.info('Sneeze Board is importing!');
 
@@ -115,8 +113,8 @@ class AchYouDataProviderEngine
    */
   getUser = async (selector: string) => {
     if (!selector) return [];
-    else if (selector === '*') return this.users;
-    else if (typeof selector === 'string') {
+    if (selector === '*') return this.users;
+    if (typeof selector === 'string') {
       return this.users.filter((user) => {
         return selector === user.userId;
       });
@@ -148,10 +146,7 @@ const sneezeBoardWebViewProvider: IWebViewProvider = {
 export async function activate() {
   logger.info('Sneeze Board is activating!');
 
-  const sneezeDataProvider = await papi.dataProvider.registerEngine(
-    'sneezeBoard.sneezes',
-    new AchYouDataProviderEngine(),
-  );
+  const sneezeDataProvider = await papi.dataProviders.get('sneezeBoard.sneezes');
 
   const sneezeBoardWebViewProviderPromise = papi.webViewProviders.register(
     sneezeBoardWebViewType,
