@@ -4,8 +4,8 @@
   "supportUrl": "",
   "localizedDisplayInfo": {
     "en": {
-      "displayName": "Paranext Extension Template",
-      "shortSummary": "Base template for a Platform.Bible Extension",
+      "displayName": "Sneeze Board",
+      "shortSummary": "A Platform.Bible client for the SIL Sneeze Board.",
       "description": "assets/descriptions/description-en.md"
     }
   }

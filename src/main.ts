@@ -1,10 +1,10 @@
 import { logger } from '@papi/backend';
 
 export async function activate() {
-  logger.debug('Extension template is activating!');
+  logger.debug('Sneeze Board is activating!');
 }
 
 export async function deactivate() {
-  logger.debug('Extension template is deactivating!');
+  logger.debug('Sneeze Board is deactivating!');
   return true;
 }
