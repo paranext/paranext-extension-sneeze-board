@@ -97,4 +97,21 @@ process.on('message', async (msg: BridgeCommand) => {
   }
 });
 
+process.on('uncaughtException', (err) => {
+  log('error', `uncaughtException: ${err.message}`);
+});
+process.on('unhandledRejection', (reason) => {
+  log('error', `unhandledRejection: ${String(reason)}`);
+});
+const onExit = () => {
+  try {
+    client.disconnect();
+  } catch {
+    /* ignore */
+  }
+  process.exit(0);
+};
+process.on('SIGTERM', onExit);
+process.on('SIGINT', onExit);
+
 log('info', 'bridge started');

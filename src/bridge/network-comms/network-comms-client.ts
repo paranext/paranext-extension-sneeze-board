@@ -32,8 +32,10 @@ export class NetworkCommsClient {
 
   connect(host: string, port: number): Promise<void> {
     this.setState('connecting');
+    let settled = false;
     return new Promise((resolve, reject) => {
       const socket = net.createConnection({ host, port }, () => {
+        settled = true;
         this.setState('open');
         resolve();
       });
@@ -42,7 +44,11 @@ export class NetworkCommsClient {
       socket.on('close', () => this.setState('closed'));
       socket.on('error', (err) => {
         this.setState('error', err.message);
-        reject(err);
+        if (!settled) {
+          settled = true;
+          reject(err);
+        }
+        // Otherwise the error is reported via setState; the socket will also emit 'close'.
       });
     });
   }

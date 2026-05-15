@@ -9,6 +9,7 @@
   "scripts": {
     "build:web-view": "webpack --config ./webpack/webpack.config.web-view.ts",
     "build:main": "webpack --config ./webpack/webpack.config.main.ts",
+    "build:bridge": "webpack --config ./webpack/webpack.config.bridge.ts",
     "build": "webpack",
     "watch": "npm run build -- --watch",
     "build:production": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=false webpack",

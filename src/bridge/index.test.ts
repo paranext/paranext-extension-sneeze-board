@@ -12,7 +12,12 @@ const bundleExists = existsSync(bridgeBundlePath);
 
 describe.skipIf(!bundleExists)('bridge IPC smoke', () => {
   it('sends connect/disconnect and emits state events', async () => {
-    const server = net.createServer();
+    const sockets: net.Socket[] = [];
+    const server = net.createServer((socket) => {
+      sockets.push(socket);
+      // Swallow client-side close/reset so vitest doesn't see unhandled errors.
+      socket.on('error', () => {});
+    });
     await new Promise<void>((res) => server.listen(0, '127.0.0.1', res));
     const port = (server.address() as net.AddressInfo).port;
 
@@ -29,7 +34,15 @@ describe.skipIf(!bundleExists)('bridge IPC smoke', () => {
     );
 
     bridge.send({ kind: 'disconnect' });
+    // Wait a beat for the bridge to disconnect cleanly before killing the process.
+    await new Promise((r) => {
+      setTimeout(r, 50);
+    });
     bridge.kill();
+    await new Promise<void>((res) => {
+      bridge.on('exit', () => res());
+    });
+    for (const s of sockets) s.destroy();
     await new Promise<void>((res) => server.close(() => res()));
   });
 });
