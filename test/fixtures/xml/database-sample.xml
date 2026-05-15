@@ -1,0 +1,14 @@
+<SneezeDatabase Version="1">
+  <CountdownStart>27002</CountdownStart>
+  <Sneezes>
+    <Sneeze userId="944616bd-20a1-4659-87af-04563043ffde" date="2020-03-14T18:30:00.0000000Z" />
+    <Sneeze userId="c897cd73-9100-4e6a-8a32-fe237f1e9928" date="2020-03-15T11:15:42.1234567Z">Hayfever season</Sneeze>
+    <Sneeze userId="c897cd73-9100-4e6a-8a32-fe237f1e9928" date="2020-03-15T11:18:00.0000000Z" />
+    <Sneeze userId="d111fa20-1234-4567-89ab-cdef01234567" date="2020-03-16T08:00:00.0000000Z">Bless you</Sneeze>
+  </Sneezes>
+  <Users>
+    <User userId="944616bd-20a1-4659-87af-04563043ffde" color="Sienna">Nemo</User>
+    <User userId="c897cd73-9100-4e6a-8a32-fe237f1e9928" color="#FF8800">Tim</User>
+    <User userId="d111fa20-1234-4567-89ab-cdef01234567" color="#3399FF">Alice</User>
+  </Users>
+</SneezeDatabase>
