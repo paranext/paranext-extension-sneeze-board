@@ -2,3 +2,60 @@
   padding: 16px;
   font-family: system-ui, sans-serif;
 }
+
+.sneeze-board__connection-bar,
+.sneeze-board__user-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.sneeze-board__swatch {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #888;
+  border-radius: 3px;
+}
+
+.sneeze-board__status {
+  font-size: 0.9em;
+  color: #555;
+}
+
+.sneeze-grid {
+  overflow-x: auto;
+  overflow-y: hidden;
+  width: 100%;
+  height: 60vh;
+  border: 1px solid var(--border, #ccc);
+}
+
+.sneeze-grid__cell {
+  position: absolute;
+  font-family: monospace;
+  padding: 0 2px;
+}
+
+.sneeze-grid__cell.has-comment {
+  outline: 1px solid goldenrod;
+}
+
+.sneeze-board__stats-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sneeze-board__stats {
+  background: white;
+  padding: 24px;
+  min-width: 300px;
+  max-height: 80vh;
+  overflow: auto;
+}
