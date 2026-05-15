@@ -7,13 +7,18 @@ import type {
 } from '@papi/core';
 import type { ChildProcess } from 'child_process';
 import { randomUUID } from 'crypto';
-import type { SneezeBoardState, SneezeRecord, UserInfo } from 'paranext-extension-sneeze-board';
+import type {
+  SneezeBoardState,
+  SneezeBoardStateChange,
+  SneezeRecord,
+  UserInfo,
+} from 'paranext-extension-sneeze-board';
 
 import sneezeBoardWebViewContent from './web-views/sneeze-board.web-view?inline';
 import sneezeBoardStyles from './web-views/sneeze-board.web-view.scss?inline';
 
 // Bridge IPC types are duplicated here (importing across the host/bridge boundary is
-// awkward; the types are tiny). Keep these in sync with src/bridge/ipc-types.ts.
+// awkward; the types are tiny). Keep in sync with src/bridge/ipc-types.ts.
 type BridgeCommand =
   | { kind: 'connect'; host: string; port?: number }
   | { kind: 'disconnect' }
@@ -33,21 +38,25 @@ type BridgeEvent =
   | { kind: 'log'; level: 'info' | 'warn' | 'error'; message: string };
 
 const SNEEZE_BOARD_WEB_VIEW_TYPE = 'sneezeBoard.react';
-const SNEEZE_BOARD_NETWORK_OBJECT_ID = 'sneezeBoard.state';
+const SNEEZE_BOARD_STATE_CHANGE_EVENT = 'sneezeBoard.onDidChangeState';
 
 let bridge: ChildProcess | undefined;
 let state: SneezeBoardState = { connection: 'idle' };
-const stateSubscribers = new Set<(s: SneezeBoardState) => void>();
+let stateChangeEmitter:
+  | ReturnType<typeof papi.network.createNetworkEventEmitter<SneezeBoardStateChange>>
+  | undefined;
+
+function emitState() {
+  try {
+    stateChangeEmitter?.emit(state);
+  } catch (e) {
+    logger.error(`emitState failed: ${(e as Error).message}`);
+  }
+}
 
 function setState(patch: Partial<SneezeBoardState>) {
   state = { ...state, ...patch };
-  for (const s of stateSubscribers) {
-    try {
-      s(state);
-    } catch (e) {
-      logger.error(`subscriber error: ${(e as Error).message}`);
-    }
-  }
+  emitState();
 }
 
 function sendToBridge(cmd: BridgeCommand) {
@@ -68,7 +77,9 @@ function handleBridgeEvent(ev: BridgeEvent) {
       break;
     case 'personSneezed': {
       const db = state.database;
-      if (db) setState({ database: { ...db, sneezes: [...db.sneezes, ev.record] } });
+      // Dedupe: optimistic local update may have already added this sneeze.
+      if (db && !db.sneezes.some((s) => s.date === ev.record.date))
+        setState({ database: { ...db, sneezes: [...db.sneezes, ev.record] } });
       break;
     }
     case 'userUpdated': {
@@ -131,9 +142,62 @@ const sneezeBoardWebViewProvider: IWebViewProvider = {
   },
 };
 
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+const DATE_RANGE_VALUES = [
+  'oneWeek',
+  'twoWeeks',
+  'oneMonth',
+  'threeMonths',
+  'sixMonths',
+  'year',
+  'allTime',
+] as const;
+
 export async function activate(context: ExecutionActivationContext) {
   logger.info('Sneeze Board is activating!');
+
+  try {
+    stateChangeEmitter = papi.network.createNetworkEventEmitter<SneezeBoardStateChange>(
+      SNEEZE_BOARD_STATE_CHANGE_EVENT,
+    );
+    // Register dispose immediately so a partial-activation failure still tears it down.
+    context.registrations.add(stateChangeEmitter.dispose);
+  } catch (e) {
+    logger.warn(
+      `createNetworkEventEmitter failed (likely already registered from a previous load): ${(e as Error).message}. Web view will not receive state updates until host restart.`,
+    );
+    stateChangeEmitter = undefined;
+  }
+
   spawnBridge(context);
+
+  const validators = await Promise.all([
+    papi.settings.registerValidator(
+      'sneezeBoard.serverIp',
+      async (newValue) => typeof newValue === 'string',
+    ),
+    papi.settings.registerValidator(
+      'sneezeBoard.lastSneezerId',
+      async (newValue) => typeof newValue === 'string',
+    ),
+    papi.settings.registerValidator(
+      'sneezeBoard.dateRange',
+      async (newValue) =>
+        typeof newValue === 'string' && (DATE_RANGE_VALUES as readonly string[]).includes(newValue),
+    ),
+    papi.settings.registerValidator(
+      'sneezeBoard.boardBackgroundColor',
+      async (newValue) => typeof newValue === 'string' && HEX_COLOR_RE.test(newValue),
+    ),
+    papi.settings.registerValidator(
+      'sneezeBoard.fontSize',
+      async (newValue) =>
+        typeof newValue === 'number' &&
+        Number.isInteger(newValue) &&
+        newValue >= 6 &&
+        newValue <= 96,
+    ),
+  ]);
 
   const unsubs = await Promise.all([
     papi.commands.registerCommand('sneezeBoard.connect', async (ip: string) => {
@@ -150,21 +214,32 @@ export async function activate(context: ExecutionActivationContext) {
     papi.commands.registerCommand(
       'sneezeBoard.sneeze',
       async (userId: string, comment?: string) => {
-        sendToBridge({
-          kind: 'sneeze',
-          record: { userId, date: new Date().toISOString(), comment },
-        });
+        const record = { userId, date: new Date().toISOString(), comment };
+        sendToBridge({ kind: 'sneeze', record });
+        // Optimistic local update — the C# server's broadcast back to the sender
+        // fails on localhost, so apply locally too. Duplicate broadcasts later are deduped.
+        const db = state.database;
+        if (db) setState({ database: { ...db, sneezes: [...db.sneezes, record] } });
       },
     ),
     papi.commands.registerCommand('sneezeBoard.addUser', async (name: string, color: string) => {
-      sendToBridge({ kind: 'addUser', user: { userId: randomUUID(), name, color } });
+      const user = { userId: randomUUID(), name, color };
+      sendToBridge({ kind: 'addUser', user });
+      const db = state.database;
+      if (db) setState({ database: { ...db, users: [...db.users, user] } });
     }),
     papi.commands.registerCommand(
       'sneezeBoard.updateUser',
       async (userId: string, color: string) => {
         const user = state.database?.users.find((u) => u.userId === userId);
         if (!user) return;
-        sendToBridge({ kind: 'updateUser', user: { ...user, color } });
+        const updated = { ...user, color };
+        sendToBridge({ kind: 'updateUser', user: updated });
+        const db = state.database;
+        if (db)
+          setState({
+            database: { ...db, users: db.users.map((u) => (u.userId === userId ? updated : u)) },
+          });
       },
     ),
     papi.commands.registerCommand(
@@ -172,13 +247,21 @@ export async function activate(context: ExecutionActivationContext) {
       async (date: string, comment: string) => {
         const record = state.database?.sneezes.find((s) => s.date === date);
         if (!record) return;
-        sendToBridge({ kind: 'updateSneeze', record: { ...record, comment } });
+        const updated = { ...record, comment };
+        sendToBridge({ kind: 'updateSneeze', record: updated });
+        const db = state.database;
+        if (db)
+          setState({
+            database: { ...db, sneezes: db.sneezes.map((s) => (s.date === date ? updated : s)) },
+          });
       },
     ),
     papi.commands.registerCommand('sneezeBoard.removeSneeze', async (date: string) => {
       const record = state.database?.sneezes.find((s) => s.date === date);
       if (!record) return;
       sendToBridge({ kind: 'removeSneeze', record });
+      const db = state.database;
+      if (db) setState({ database: { ...db, sneezes: db.sneezes.filter((s) => s.date !== date) } });
     }),
     papi.commands.registerCommand('sneezeBoard.setCurrentUser', async (userId: string) => {
       try {
@@ -191,25 +274,12 @@ export async function activate(context: ExecutionActivationContext) {
     papi.commands.registerCommand('sneezeBoard.openWebView', async () =>
       papi.webViews.openWebView(SNEEZE_BOARD_WEB_VIEW_TYPE),
     ),
+    papi.commands.registerCommand('sneezeBoard.getState', async () => state),
     papi.webViewProviders.registerWebViewProvider(
       SNEEZE_BOARD_WEB_VIEW_TYPE,
       sneezeBoardWebViewProvider,
     ),
   ]);
-
-  // NetworkObject 'sneezeBoard.state' — proxied to web view.
-  const stateNetworkObject = await papi.networkObjects.set(SNEEZE_BOARD_NETWORK_OBJECT_ID, {
-    getState: () => Promise.resolve(state),
-    subscribeState: (cb: (s: SneezeBoardState) => void) => {
-      stateSubscribers.add(cb);
-      cb(state); // emit current immediately
-      const unsub = async () => {
-        stateSubscribers.delete(cb);
-        return true;
-      };
-      return Promise.resolve(unsub);
-    },
-  });
 
   // Restore current user from settings (if any).
   try {
@@ -220,8 +290,8 @@ export async function activate(context: ExecutionActivationContext) {
     logger.warn(`could not restore lastSneezerId: ${(e as Error).message}`);
   }
 
+  for (const u of validators) context.registrations.add(u);
   for (const u of unsubs) context.registrations.add(u);
-  context.registrations.add(stateNetworkObject.dispose);
   context.registrations.add(() => {
     bridge?.kill();
     return true;
@@ -234,5 +304,7 @@ export async function deactivate() {
   logger.info('Sneeze Board is deactivating!');
   bridge?.kill();
   bridge = undefined;
+  // stateChangeEmitter is disposed via context.registrations; don't dispose twice here.
+  stateChangeEmitter = undefined;
   return true;
 }

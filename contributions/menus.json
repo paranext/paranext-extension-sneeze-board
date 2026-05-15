@@ -1,8 +1,27 @@
 {
   "mainMenu": {
     "columns": {},
-    "groups": {},
-    "items": []
+    "groups": {
+      "sneezeBoard.openGroup": {
+        "menuItem": "sneezeBoard.mainMenu",
+        "order": 3711
+      }
+    },
+    "items": [
+      {
+        "label": "%mainMenu_sneezeBoard%",
+        "localizeNotes": "Application main menu > Sneeze Board",
+        "group": "platform.projectResources",
+        "order": -50,
+        "id": "sneezeBoard.mainMenu"
+      },
+      {
+        "label": "%sneezeBoardMenu_openSneezeBoard%",
+        "group": "sneezeBoard.openGroup",
+        "order": 0,
+        "command": "sneezeBoard.openWebView"
+      }
+    ]
   },
   "defaultWebViewTopMenu": {
     "columns": {},

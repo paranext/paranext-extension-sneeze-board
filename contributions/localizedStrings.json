@@ -1,15 +1,20 @@
 {
-  "metadata": {},
+  "metadata": {
+    "%mainMenu_sneezeBoard%": { "notes": "Application main menu > Sneeze Board" },
+    "%sneezeBoardMenu_openSneezeBoard%": { "notes": "Sneeze Board menu > Open Sneeze Board" }
+  },
   "localizedStrings": {
     "en": {
-      "settings_sneezeBoard_group_label": "Sneeze Board",
-      "settings_sneezeBoard_group_description": "Settings for the Sneeze Board extension",
-      "settings_sneezeBoard_serverIp_label": "Server IP",
-      "settings_sneezeBoard_serverIp_description": "IP address of the SneezeBoardServer",
-      "settings_sneezeBoard_lastSneezerId_label": "Last sneezer ID",
-      "settings_sneezeBoard_dateRange_label": "Apocalypse date range",
-      "settings_sneezeBoard_boardBackgroundColor_label": "Board background color",
-      "settings_sneezeBoard_fontSize_label": "Sneeze board font size"
+      "%mainMenu_sneezeBoard%": "Sneeze Board",
+      "%sneezeBoardMenu_openSneezeBoard%": "Open Sneeze Board",
+      "%settings_sneezeBoard_group_label%": "Sneeze Board",
+      "%settings_sneezeBoard_group_description%": "Settings for the Sneeze Board extension",
+      "%settings_sneezeBoard_serverIp_label%": "Server IP",
+      "%settings_sneezeBoard_serverIp_description%": "IP address of the SneezeBoardServer",
+      "%settings_sneezeBoard_lastSneezerId_label%": "Last sneezer ID",
+      "%settings_sneezeBoard_dateRange_label%": "Apocalypse date range",
+      "%settings_sneezeBoard_boardBackgroundColor_label%": "Board background color",
+      "%settings_sneezeBoard_fontSize_label%": "Sneeze board font size"
     }
   }
 }

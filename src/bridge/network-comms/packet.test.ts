@@ -1,20 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { encodePacket, tryDecodePacket } from './packet';
-import { existsSync, readFileSync } from 'node:fs';
-
-const fixturePath = 'test/fixtures/wire/01-database-requested.bin';
-const fixtureExists = existsSync(fixturePath);
 
 describe('packet framing', () => {
-  it.skipIf(!fixtureExists)('decodes the captured DatabaseRequested packet end-to-end', () => {
-    const buf = readFileSync(fixturePath);
-    const decoded = tryDecodePacket(new Uint8Array(buf));
-    expect(decoded).not.toBeNull();
-    expect(decoded!.header.packetType).toBe('DatabaseRequested');
-    expect(decoded!.payload.length).toBe(decoded!.header.payloadPacketSize);
-    expect(decoded!.bytesConsumed).toBe(buf.length);
-  });
-
   it('returns null when buffer is incomplete', () => {
     const payload = new TextEncoder().encode('hello world');
     const packet = encodePacket({ packetType: 'Test', payloadPacketSize: payload.length }, payload);

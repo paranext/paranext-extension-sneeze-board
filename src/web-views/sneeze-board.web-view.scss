@@ -3,12 +3,18 @@
   font-family: system-ui, sans-serif;
 }
 
-.sneeze-board__connection-bar,
+.sneeze-board__connection-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.sneeze-board__connection-row,
 .sneeze-board__user-bar {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
   flex-wrap: wrap;
 }
 
@@ -23,6 +29,29 @@
 .sneeze-board__status {
   font-size: 0.9em;
   color: #555;
+}
+
+.sneeze-board__status--connecting {
+  color: #2563eb;
+}
+
+.sneeze-board__status--open {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.sneeze-board__status--closed,
+.sneeze-board__status--error {
+  color: #dc2626;
+}
+
+.sneeze-board__error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 0.95em;
 }
 
 .sneeze-grid {

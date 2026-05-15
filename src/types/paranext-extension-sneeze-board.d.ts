@@ -17,11 +17,8 @@ declare module 'paranext-extension-sneeze-board' {
     currentUserId?: string;
   };
 
-  /** PAPI NetworkObject contract for the Sneeze Board */
-  export type SneezeBoardStateNetworkObject = {
-    getState(): Promise<SneezeBoardState>;
-    subscribeState(callback: (state: SneezeBoardState) => void): Promise<() => Promise<boolean>>;
-  };
+  /** Event payload broadcast on every state change. */
+  export type SneezeBoardStateChange = SneezeBoardState;
 }
 
 declare module 'papi-shared-types' {
@@ -43,5 +40,8 @@ declare module 'papi-shared-types' {
     'sneezeBoard.removeSneeze': (date: string) => Promise<void>;
     'sneezeBoard.setCurrentUser': (userId: string) => Promise<void>;
     'sneezeBoard.openWebView': () => Promise<string | undefined>;
+    'sneezeBoard.getState': () => Promise<
+      import('paranext-extension-sneeze-board').SneezeBoardState
+    >;
   }
 }
