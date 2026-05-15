@@ -21,8 +21,8 @@ const configMain: webpack.Configuration = merge(configBase, {
   target: 'web',
   // configuration name
   name: 'main',
-  // Wait until WebView bundling finishes - webpack.config.web-view.ts
-  dependencies: ['webView'],
+  // Wait until WebView and bridge bundling finishes
+  dependencies: ['webView', 'bridge'],
   // Instructions on what output to create
   output: {
     // Extension output directory
@@ -31,8 +31,9 @@ const configMain: webpack.Configuration = merge(configBase, {
     library: {
       type: LIBRARY_TYPE,
     },
-    // Empty the output folder before building
-    clean: true,
+    // Empty the output folder before building, but keep the bridge bundle (built by
+    // the prior bridge webpack config). Otherwise main's clean would wipe `dist/assets/bridge`.
+    clean: { keep: /^assets[\\\/]bridge[\\\/]/ },
     // Set the chunk format to build for a Node.js module even though our target is `web`
     // https://webpack.js.org/configuration/output/#outputchunkformat
     chunkFormat: 'commonjs',
