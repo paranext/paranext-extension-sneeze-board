@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  findUserStats,
-  findLongestStreaks,
-  estimateApocalypseDate,
-} from './stats';
+import { findUserStats, findLongestStreaks, estimateApocalypseDate } from './stats';
 import type { SneezeDatabase } from '../bridge/xml/sneeze-database';
 
 const db: SneezeDatabase = {

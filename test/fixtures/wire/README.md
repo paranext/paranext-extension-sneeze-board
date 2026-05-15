@@ -40,13 +40,13 @@ source-of-truth check.
 
 ## Naming convention
 
-| File | Direction | Message type | Source |
-|---|---|---|---|
-| `01-database-requested.bin` | C->S | `DatabaseRequested` | First connect from C# client |
-| `01-database-object.bin` | S->C | `DatabaseObject` | Server reply, empty DB |
-| `02-mixed-session-c2s.bin` | C->S | AddUser, Sneeze, UpdateSneeze, RemoveSneeze | Single session |
-| `02-mixed-session-s2c.bin` | S->C | UserUpdated, PersonSneezed, SneezeUpdated, SneezeRemoved | ... |
-| `03-update-user.bin` | C->S | `UpdateUser` | Change color |
+| File                        | Direction | Message type                                             | Source                       |
+| --------------------------- | --------- | -------------------------------------------------------- | ---------------------------- |
+| `01-database-requested.bin` | C->S      | `DatabaseRequested`                                      | First connect from C# client |
+| `01-database-object.bin`    | S->C      | `DatabaseObject`                                         | Server reply, empty DB       |
+| `02-mixed-session-c2s.bin`  | C->S      | AddUser, Sneeze, UpdateSneeze, RemoveSneeze              | Single session               |
+| `02-mixed-session-s2c.bin`  | S->C      | UserUpdated, PersonSneezed, SneezeUpdated, SneezeRemoved | ...                          |
+| `03-update-user.bin`        | C->S      | `UpdateUser`                                             | Change color                 |
 
 Once present, the `all-fixtures.test.ts` test in
 `src/bridge/network-comms/` will automatically verify every `.bin` decodes

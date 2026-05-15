@@ -6,18 +6,15 @@ const fixturePath = 'test/fixtures/wire/01-database-requested.bin';
 const fixtureExists = existsSync(fixturePath);
 
 describe('PacketHeader codec', () => {
-  it.skipIf(!fixtureExists)(
-    'decodes a real DatabaseRequested header from the C# client',
-    () => {
-      const fileBytes = readFileSync(fixturePath);
-      // First byte: header length. Next N bytes: protobuf-encoded header.
-      const headerLen = fileBytes[0];
-      const headerBytes = fileBytes.subarray(1, 1 + headerLen);
-      const header = decodeHeader(headerBytes);
-      expect(header.packetType).toBe('DatabaseRequested');
-      expect(header.payloadPacketSize).toBeGreaterThanOrEqual(0);
-    },
-  );
+  it.skipIf(!fixtureExists)('decodes a real DatabaseRequested header from the C# client', () => {
+    const fileBytes = readFileSync(fixturePath);
+    // First byte: header length. Next N bytes: protobuf-encoded header.
+    const headerLen = fileBytes[0];
+    const headerBytes = fileBytes.subarray(1, 1 + headerLen);
+    const header = decodeHeader(headerBytes);
+    expect(header.packetType).toBe('DatabaseRequested');
+    expect(header.payloadPacketSize).toBeGreaterThanOrEqual(0);
+  });
 
   it('round-trips a simple header', () => {
     const original: PacketHeader = {

@@ -1,12 +1,13 @@
 import papi, { logger } from '@papi/backend';
-import type { ExecutionActivationContext, IWebViewProvider, SavedWebViewDefinition, WebViewDefinition } from '@papi/core';
+import type {
+  ExecutionActivationContext,
+  IWebViewProvider,
+  SavedWebViewDefinition,
+  WebViewDefinition,
+} from '@papi/core';
 import type { ChildProcess } from 'child_process';
 import { randomUUID } from 'crypto';
-import type {
-  SneezeBoardState,
-  SneezeRecord,
-  UserInfo,
-} from 'paranext-extension-sneeze-board';
+import type { SneezeBoardState, SneezeRecord, UserInfo } from 'paranext-extension-sneeze-board';
 
 import sneezeBoardWebViewContent from './web-views/sneeze-board.web-view?inline';
 import sneezeBoardStyles from './web-views/sneeze-board.web-view.scss?inline';
@@ -118,9 +119,7 @@ function spawnBridge(context: ExecutionActivationContext) {
 }
 
 const sneezeBoardWebViewProvider: IWebViewProvider = {
-  async getWebView(
-    savedWebView: SavedWebViewDefinition,
-  ): Promise<WebViewDefinition | undefined> {
+  async getWebView(savedWebView: SavedWebViewDefinition): Promise<WebViewDefinition | undefined> {
     if (savedWebView.webViewType !== SNEEZE_BOARD_WEB_VIEW_TYPE) return undefined;
     return {
       ...savedWebView,

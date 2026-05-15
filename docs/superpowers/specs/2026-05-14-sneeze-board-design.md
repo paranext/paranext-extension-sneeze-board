@@ -17,6 +17,7 @@ Reimplement the existing C# `SneezeBoardClient` (`../SneezeBoard/SneezeBoardClie
 **Message vocabulary (constants from `SneezeBoardCommon/Messages.cs`):**
 
 Outbound (client → server):
+
 - `DatabaseRequested` — `int` payload (`0`); server replies `DatabaseObject`
 - `Sneeze` — `SneezeRecord` XML; server broadcasts `PersonSneezed`
 - `AddUser` — `UserInfo` XML; server broadcasts `UserUpdated`
@@ -25,6 +26,7 @@ Outbound (client → server):
 - `RemoveSneeze` — `SneezeRecord` XML; server broadcasts `SneezeRemoved`
 
 Inbound (server → client):
+
 - `DatabaseObject` — `SneezeDatabase` XML (response to `DatabaseRequested`)
 - `PersonSneezed` — `SneezeRecord` XML (broadcast)
 - `UserUpdated` — `UserInfo` XML (broadcast)
@@ -32,6 +34,7 @@ Inbound (server → client):
 - `SneezeRemoved` — `SneezeRecord` XML (broadcast)
 
 **XML payload shapes (from `SneezeBoardCommon/`):**
+
 ```xml
 <SneezeRecord userId="GUID" date="ISO8601-UTC">optional comment text</SneezeRecord>
 <UserInfo userId="GUID" color="#RRGGBB">user display name</UserInfo>
@@ -46,11 +49,13 @@ Inbound (server → client):
   </Users>
 </SneezeDatabase>
 ```
+
 The `CountdownStart` field (default `27002`) is also a child of `SneezeDatabase`. `ServerObject.SerializeToStream` emits no XML declaration, no namespaces, with indentation.
 
 ### 2.2 Platform.Bible sandboxes extensions
 
 `paranext-core/src/extension-host/services/extension.service.ts:1316-1348` monkey-patches `Module.prototype.require` to only allow:
+
 - `@papi/backend`, `@papi/core`, `@sillsdev/scripture`, `platform-bible-utils`, `crypto`
 
 And it deletes these globals: `eval`, `Function`, `XMLHttpRequest`, `WebSocket`. `fetch` is replaced with `papi.fetch` (HTTP only).
@@ -71,11 +76,11 @@ And it deletes these globals: `eval`, `Function`, `XMLHttpRequest`, `WebSocket`.
 
 Three options were considered:
 
-| Option | Pros | Cons | Verdict |
-|---|---|---|---|
-| **A. Pure TS in extension main** | Single artifact; no IPC | Blocked by sandbox (`net` not requireable) | ❌ Infeasible |
-| **B. C# bridge binary** | Reuses proven NetworkComms.Net library | Ship 30–60 MB self-contained binary per platform; .NET runtime dependency | Possible fallback |
-| **C. Forked Node bridge (TypeScript)** | Pure TS; uses Node built-ins (`net`); IPC via `process.send`; no extra runtime | Must reimplement NetworkComms.Net wire format | ✅ **Chosen** |
+| Option                                 | Pros                                                                           | Cons                                                                      | Verdict           |
+| -------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ----------------- |
+| **A. Pure TS in extension main**       | Single artifact; no IPC                                                        | Blocked by sandbox (`net` not requireable)                                | ❌ Infeasible     |
+| **B. C# bridge binary**                | Reuses proven NetworkComms.Net library                                         | Ship 30–60 MB self-contained binary per platform; .NET runtime dependency | Possible fallback |
+| **C. Forked Node bridge (TypeScript)** | Pure TS; uses Node built-ins (`net`); IPC via `process.send`; no extra runtime | Must reimplement NetworkComms.Net wire format                             | ✅ **Chosen**     |
 
 **Chosen: Option C.** NetworkComms.Net v3.0.3 is open-source and pinned. We implement only the framing and packet types this app needs. Verification: golden-byte fixtures captured from a real C# client + integration tests against a locally-spawned `SneezeBoardServer.exe`.
 
@@ -113,6 +118,7 @@ If protocol reimplementation hits a wall, the fallback is Option B without chang
 ```
 
 Boundaries:
+
 - **Web view**: pure React, no networking. Reads state from a PAPI Network Object; calls commands via `papi.commands.sendCommand`.
 - **Extension main**: thin proxy. Owns the bridge subprocess lifecycle. Exposes commands and a Network Object. Persists user settings.
 - **Bridge**: owns the TCP socket. Implements NetworkComms.Net framing and XML codecs. Stateless from the extension's perspective — extension restarts the bridge if it dies.
@@ -129,7 +135,7 @@ type PacketHeader = {
   totalPayloadSize: number;
   packetIdentifier?: string;
   requestedReturnPacketType?: string;
-  packetSerializerId?: number;     // Protobuf default = 1, NullSerializer = 0
+  packetSerializerId?: number; // Protobuf default = 1, NullSerializer = 0
   payloadDataProcessors?: number[];
 };
 
@@ -137,17 +143,19 @@ export function encodeHeader(h: PacketHeader): Buffer;
 export function decodeHeader(buf: Buffer): PacketHeader;
 export function encodePacket(header: PacketHeader, payload: Buffer): Buffer;
 // Returns null if not enough bytes; otherwise consumed bytes and the packet.
-export function tryDecodePacket(buf: Buffer):
-  | { header: PacketHeader; payload: Buffer; bytesConsumed: number }
-  | null;
+export function tryDecodePacket(
+  buf: Buffer,
+): { header: PacketHeader; payload: Buffer; bytesConsumed: number } | null;
 ```
 
 The packet frame on the wire (NetworkComms.Net v3.0.3, per its open-source `PacketBuilder`/`PacketHeader` source):
+
 ```
 [ 1 byte:  packet header serializer length ]
 [ N bytes: protobuf-encoded PacketHeader   ]
 [ M bytes: payload                          ]
 ```
+
 Where `M = header.totalPayloadSize`. The header carries `payloadPacketType`, `payloadSize`, and optional `requestedReturnPacketType`, `packetIdentifier`. Verified by capturing real bytes (§9.2).
 
 ### 6.2 Bridge: `src/bridge/network-comms-client.ts`
@@ -161,8 +169,12 @@ export class NetworkCommsClient {
   connect(host: string, port: number): Promise<void>;
   disconnect(): void;
   send(packetType: string, payload: string): void;
-  sendAndAwait(packetType: string, expectedReply: string, payload: string,
-               timeoutMs?: number): Promise<string>;
+  sendAndAwait(
+    packetType: string,
+    expectedReply: string,
+    payload: string,
+    timeoutMs?: number,
+  ): Promise<string>;
   on(packetType: string, handler: (payload: string) => void): () => void;
   onState(handler: (s: ConnectionState, err?: string) => void): () => void;
 }
@@ -180,7 +192,7 @@ Hand-written XML emitters/parsers. Reason: must byte-match `XmlSerializer` outpu
 
 ```ts
 type SneezeRecord = { userId: string; date: string /* ISO 8601 UTC */; comment?: string };
-type UserInfo    = { userId: string; name: string; color: string /* #RRGGBB */ };
+type UserInfo = { userId: string; name: string; color: string /* #RRGGBB */ };
 type SneezeDatabase = {
   version: number;
   countdownStart: number;
@@ -206,6 +218,7 @@ The forked Node script. Reads IPC messages from extension main, calls into `Netw
 IPC protocol (JSON over `process.send`):
 
 Main → bridge (`Command` messages):
+
 ```ts
 { kind: 'connect', host: string, port?: number }
 { kind: 'disconnect' }
@@ -217,6 +230,7 @@ Main → bridge (`Command` messages):
 ```
 
 Bridge → main (`Event` messages):
+
 ```ts
 { kind: 'state', state: ConnectionState, error?: string }
 { kind: 'database', db: SneezeDatabase }
@@ -247,26 +261,28 @@ export async function activate(context: ExecutionActivationContext) {
 ```
 
 State held in main:
+
 - `connectionState`, `database`, `currentUserId`, `error` — mirrored to NetworkObject
 - Bridge child process handle, restart-count, last-known-good IP
 
 ### 6.6 Commands (PAPI)
 
-| Command | Args | Behavior |
-|---|---|---|
-| `sneezeBoard.connect` | `ip: string` | Send `connect` to bridge. Update settings. |
-| `sneezeBoard.disconnect` | — | Send `disconnect` to bridge. |
-| `sneezeBoard.sneeze` | `userId: string`, `comment?: string` | Builds `SneezeRecord(userId, nowUtc, comment)`, sends to bridge. |
-| `sneezeBoard.addUser` | `name: string`, `color: string` | New GUID, sends. |
-| `sneezeBoard.updateUser` | `userId: string`, `color: string` | Sends user with current name from cached DB. |
-| `sneezeBoard.updateSneeze` | `date: string`, `comment: string` | Looks up sneeze by date, mutates comment, sends. |
-| `sneezeBoard.removeSneeze` | `date: string` | Looks up sneeze by date, sends remove. |
-| `sneezeBoard.openWebView` | — | Opens or focuses the `sneezeBoard.react` web view via the PAPI web view API (exact method finalized against the current `@papi/backend` surface). |
-| `sneezeBoard.setCurrentUser` | `userId: string` | Updates the "last sneezer" setting. |
+| Command                      | Args                                 | Behavior                                                                                                                                          |
+| ---------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sneezeBoard.connect`        | `ip: string`                         | Send `connect` to bridge. Update settings.                                                                                                        |
+| `sneezeBoard.disconnect`     | —                                    | Send `disconnect` to bridge.                                                                                                                      |
+| `sneezeBoard.sneeze`         | `userId: string`, `comment?: string` | Builds `SneezeRecord(userId, nowUtc, comment)`, sends to bridge.                                                                                  |
+| `sneezeBoard.addUser`        | `name: string`, `color: string`      | New GUID, sends.                                                                                                                                  |
+| `sneezeBoard.updateUser`     | `userId: string`, `color: string`    | Sends user with current name from cached DB.                                                                                                      |
+| `sneezeBoard.updateSneeze`   | `date: string`, `comment: string`    | Looks up sneeze by date, mutates comment, sends.                                                                                                  |
+| `sneezeBoard.removeSneeze`   | `date: string`                       | Looks up sneeze by date, sends remove.                                                                                                            |
+| `sneezeBoard.openWebView`    | —                                    | Opens or focuses the `sneezeBoard.react` web view via the PAPI web view API (exact method finalized against the current `@papi/backend` surface). |
+| `sneezeBoard.setCurrentUser` | `userId: string`                     | Updates the "last sneezer" setting.                                                                                                               |
 
 ### 6.7 Settings (PAPI settings store, mirrors C# `Settings.Default`)
 
 `contributions/settings.json` declares:
+
 - `sneezeBoard.serverIp` (string, default `''`)
 - `sneezeBoard.lastSneezerId` (string, default `''`)
 - `sneezeBoard.dateRange` (enum: `oneWeek`/`twoWeeks`/`oneMonth`/`threeMonths`/`sixMonths`/`year`/`allTime`, default `allTime`)
@@ -276,6 +292,7 @@ State held in main:
 ### 6.8 Web view: `src/web-views/sneeze-board.web-view.tsx`
 
 Layout (top-down):
+
 1. **Connection bar**: IP `Input` + `Connect` button + status badge (Idle/Connecting/Connected/Failed).
 2. **User row**: `Select` user dropdown with "New..." sentinel + color swatch + `Change color` button (opens color picker dialog) + comment `Input` + `Sneeze` button + Settings/Stats icon buttons.
 3. **Apocalypse line**: `Estimated final sneeze date: <computed>` — recomputed from sneezes + date range.
@@ -291,6 +308,7 @@ Data: subscribes to NetworkObject `sneezeBoard.state` via `usePromise`/`useEvent
 ### 6.9 Stats logic: `src/util/stats.ts`
 
 Pure functions ported from C#:
+
 - `findUserStats(db)` → `Map<userId, { total, first, last }>` (mirrors `SneezeDatabase.FindUserStats`)
 - `findLongestStreaks(db)` → `Map<userId, number>` (mirrors `FindLongestStreaks`)
 - `estimateApocalypseDate(db, dateRange)` → `Date | 'noSneezesInRange'` (mirrors `SneezeBoardForm.CalculateApocalypse`)
@@ -299,6 +317,7 @@ Pure functions ported from C#:
 ## 7. Data flow walkthroughs
 
 **Connect:**
+
 1. Web view: user clicks Connect → `papi.commands.sendCommand('sneezeBoard.connect', ip)`
 2. Main: sets `connectionState='connecting'`, persists IP, sends `{kind:'connect',host:ip,port:57632}` to bridge
 3. Bridge: `socket.connect(57632, ip)` → on `'connect'`: `client.sendAndAwait('DatabaseRequested','DatabaseObject', protobufVarintZero)` and emit `state: 'open'`
@@ -308,6 +327,7 @@ Pure functions ported from C#:
 7. Web view: re-renders the grid
 
 **Sneeze:**
+
 1. Web view dispatches `sneezeBoard.sneeze(userId, comment)`
 2. Main composes record `{userId, date: new Date().toISOString(), comment}`, IPC to bridge
 3. Bridge XML-encodes the record, `client.send('Sneeze', xml)`
@@ -390,6 +410,7 @@ Manual smoke testing in Platform.Bible (`npm run start`). Vitest snapshot tests 
 ## 10. Build / packaging
 
 Three webpack configs (extend the template's two with one more):
+
 - `webpack.config.main.ts` — extension host bundle (`dist/src/main.js`)
 - `webpack.config.web-view.ts` — bundled React WebView (`dist/src/web-views/sneeze-board.web-view.js`)
 - **NEW** `webpack.config.bridge.ts` — Node target, CommonJS, no externals beyond Node built-ins, outputs `dist/assets/bridge/index.js`. The bridge bundle is fully self-contained — it does not run inside the sandbox.
@@ -399,12 +420,14 @@ The manifest's `elevatedPrivileges` adds `"createProcess"`. Assets layout under 
 ## 11. Scope
 
 **In scope (v0.1):**
+
 - All six message types correctly framed and exchanged.
 - Web view: grid, connect bar, user picker, add user, change color, sneeze, edit own sneeze, remove own sneeze, comments, apocalypse-date estimate, "we win" banner, connection-state messaging.
 - Settings: server IP, last sneezer, date range, board background color, font size.
 - Stats dialog: longest streaks list (port of `StatsForm`).
 
 **Out of scope (v0.1):**
+
 - System tray / notify-icon (no Platform.Bible analog for extensions).
 - Streak-achievement popups (`GetLongestStreak` message dialogs) — port as a stretch goal.
 - Multi-language localization — English-only initially.
@@ -412,14 +435,14 @@ The manifest's `elevatedPrivileges` adds `"createProcess"`. Assets layout under 
 
 ## 12. Risks & mitigations
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| NetworkComms.Net wire format has undocumented quirks | Medium | High | Golden-byte fixtures + integration tests against real server. Fallback to C# bridge if blocked. |
-| XML encoder doesn't match C# `XmlSerializer` exactly | Medium | High | Captured XML fixtures + round-trip tests. Server matches `SneezeRecord` by date equality only, so most XML differences are tolerated. |
-| `createProcess.fork` semantics differ from raw Node `fork` | Low | Medium | Verify with a smoke test early; the `papi.d.ts` doc snippet shows direct equivalence. |
-| Real server may have updated since 2019 | Low | Low | Use the C# client source as authoritative; if server diverges, observed bytes win. |
-| Color encoder: server stored `Sienna` (named) instead of `#A0522D` | Low | Low | Decoder accepts both forms; encoder always normalizes to `#RRGGBB`. |
-| Date-string format drift across UTC/local | Medium | High | Preserve raw inbound date string verbatim for update/remove operations. |
+| Risk                                                               | Likelihood | Impact | Mitigation                                                                                                                            |
+| ------------------------------------------------------------------ | ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| NetworkComms.Net wire format has undocumented quirks               | Medium     | High   | Golden-byte fixtures + integration tests against real server. Fallback to C# bridge if blocked.                                       |
+| XML encoder doesn't match C# `XmlSerializer` exactly               | Medium     | High   | Captured XML fixtures + round-trip tests. Server matches `SneezeRecord` by date equality only, so most XML differences are tolerated. |
+| `createProcess.fork` semantics differ from raw Node `fork`         | Low        | Medium | Verify with a smoke test early; the `papi.d.ts` doc snippet shows direct equivalence.                                                 |
+| Real server may have updated since 2019                            | Low        | Low    | Use the C# client source as authoritative; if server diverges, observed bytes win.                                                    |
+| Color encoder: server stored `Sienna` (named) instead of `#A0522D` | Low        | Low    | Decoder accepts both forms; encoder always normalizes to `#RRGGBB`.                                                                   |
+| Date-string format drift across UTC/local                          | Medium     | High   | Preserve raw inbound date string verbatim for update/remove operations.                                                               |
 
 ## 13. Salvage from current repo
 
@@ -430,6 +453,7 @@ The manifest's `elevatedPrivileges` adds `"createProcess"`. Assets layout under 
 ## 14. Open questions deferred to implementation
 
 These will be resolved during implementation, not in this spec:
+
 - Exact `packetSerializerId` value emitted by C# for `string` payloads vs `int` payloads (settle from a single captured fixture).
 - Whether NetworkComms.Net's first message includes a connection handshake or just goes straight to the first packet (settle from captured bytes).
 - Whether the bridge needs to send a periodic keep-alive (the C# client doesn't — investigate if disconnects happen during idle).

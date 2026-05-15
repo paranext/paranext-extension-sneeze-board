@@ -7,10 +7,10 @@ import configBase, { rootDir } from './webpack.config.base';
  * Webpack configuration for building the bridge bundle.
  *
  * The bridge runs as a Node child process spawned by extension main via
- * `papi.elevatedPrivileges.createProcess.fork`. It is fully self-contained
- * (no Platform.Bible sandbox restrictions apply); it speaks NetworkComms.Net
- * binary frames over TCP and exchanges IPC messages with the extension main
- * over Node's built-in `process.send` / `child.on('message')` channel.
+ * `papi.elevatedPrivileges.createProcess.fork`. It is fully self-contained (no Platform.Bible
+ * sandbox restrictions apply); it speaks NetworkComms.Net binary frames over TCP and exchanges IPC
+ * messages with the extension main over Node's built-in `process.send` / `child.on('message')`
+ * channel.
  */
 const configBridge: webpack.Configuration = merge(configBase, {
   name: 'bridge',

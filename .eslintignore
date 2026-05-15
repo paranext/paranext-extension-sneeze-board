@@ -32,4 +32,9 @@ temp-build
 # generated files
 package-lock.json
 
+# Test integration files (not in tsconfig include)
+test
+# Scripts directory (raw mjs)
+scripts
+
 # #endregion

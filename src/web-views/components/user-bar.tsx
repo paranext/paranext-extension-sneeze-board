@@ -61,11 +61,7 @@ export function UserBar({
       >
         Change color
       </Button>
-      <Input
-        placeholder="Comment"
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-      />
+      <Input placeholder="Comment" value={comment} onChange={(e) => setComment(e.target.value)} />
       <Button
         disabled={!currentUserId}
         onClick={() => {

@@ -75,20 +75,21 @@ export class NetworkCommsClient {
     timeoutMs = 30000,
   ): Promise<string> {
     return new Promise((resolve, reject) => {
+      let unsub: (() => void) | undefined;
       const timer = setTimeout(() => {
-        unsub();
+        if (unsub) unsub();
         reject(new Error(`sendAndAwait timeout waiting for ${expectedReply}`));
       }, timeoutMs);
-      const unsub = this.on(expectedReply, (reply) => {
+      unsub = this.on(expectedReply, (reply) => {
         clearTimeout(timer);
-        unsub();
+        if (unsub) unsub();
         resolve(reply);
       });
       try {
         this.send(packetType, payload);
       } catch (e) {
         clearTimeout(timer);
-        unsub();
+        if (unsub) unsub();
         reject(e);
       }
     });

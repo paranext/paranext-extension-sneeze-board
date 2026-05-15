@@ -11,6 +11,7 @@
 **Design Spec:** `docs/superpowers/specs/2026-05-14-sneeze-board-design.md`
 
 **Reference Sources:**
+
 - `../SneezeBoard/SneezeBoardCommon/` — protocol message constants, XML object shapes
 - `../SneezeBoard/SneezeBoardClient/SneezeClientListener.cs` — reference client-side behavior
 - `../SneezeBoard/SneezeBoardServer/Server.cs` — reference server-side behavior
@@ -23,9 +24,10 @@
 ### Task 0.1: Rename template placeholders
 
 **Files:**
+
 - Modify: `manifest.json`, `package.json`, `src/types/paranext-extension-template.d.ts` (rename), `src/main.ts`, `README.md`, `.github/assets/release-body.md`, `assets/displayData.json`, `LICENSE`
 
-- [ ] **Step 1: Rename `paranextExtensionTemplate` → `paranextExtensionSneezeBoard` in `manifest.json`**
+- [x] **Step 1: Rename `paranextExtensionTemplate` → `paranextExtensionSneezeBoard` in `manifest.json`**
 
 Edit `manifest.json`: replace `"name": "paranextExtensionTemplate"` with `"name": "paranextExtensionSneezeBoard"`. Replace `"src/types/paranext-extension-template.d.ts"` with `"src/types/paranext-extension-sneeze-board.d.ts"`. Add `"createProcess"` to `elevatedPrivileges`:
 
@@ -50,11 +52,11 @@ Edit `manifest.json`: replace `"name": "paranextExtensionTemplate"` with `"name"
 }
 ```
 
-- [ ] **Step 2: Update `package.json`**
+- [x] **Step 2: Update `package.json`**
 
 Replace both occurrences of `paranext-extension-template` with `paranext-extension-sneeze-board`, update `types` to `src/types/paranext-extension-sneeze-board.d.ts`, set `author` to `tjcouch-sil`. Leave dependencies/scripts as-is for now.
 
-- [ ] **Step 3: Rename the types file**
+- [x] **Step 3: Rename the types file**
 
 ```bash
 git mv src/types/paranext-extension-template.d.ts src/types/paranext-extension-sneeze-board.d.ts
@@ -62,20 +64,20 @@ git mv src/types/paranext-extension-template.d.ts src/types/paranext-extension-s
 
 Then edit the file: replace `'paranext-extension-template'` with `'paranext-extension-sneeze-board'` in the `declare module` line.
 
-- [ ] **Step 4: Update `src/main.ts` debug strings**
+- [x] **Step 4: Update `src/main.ts` debug strings**
 
 Replace `'Extension template is activating!'` → `'Sneeze Board is activating!'` and `'Extension template is deactivating!'` → `'Sneeze Board is deactivating!'`.
 
-- [ ] **Step 5: Update `assets/displayData.json`**
+- [x] **Step 5: Update `assets/displayData.json`**
 
 Set `localizedDisplayInfo.en.displayName` to `"Sneeze Board"`, `shortSummary` to `"A Platform.Bible client for the SIL Sneeze Board."`, leave `description` field alone for now.
 
-- [ ] **Step 6: Verify build still works**
+- [x] **Step 6: Verify build still works**
 
 Run: `npm run build`
 Expected: build succeeds with no errors. `dist/` contains the renamed types file.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add manifest.json package.json src/main.ts src/types/ assets/displayData.json
@@ -87,20 +89,21 @@ git commit -m "chore: rename template placeholders to sneeze-board"
 The new template removed vitest. Add it back.
 
 **Files:**
+
 - Modify: `package.json`
 - Create: `vitest.config.ts`
 
-- [ ] **Step 1: Install vitest**
+- [x] **Step 1: Install vitest**
 
 ```bash
 npm install --save-dev vitest@^3.2.4
 ```
 
-- [ ] **Step 2: Add `test` script to `package.json`**
+- [x] **Step 2: Add `test` script to `package.json`**
 
 Add to `scripts`: `"test": "vitest --passWithNoTests"`, and add `"typecheck": "tsc -p ./tsconfig.json"`.
 
-- [ ] **Step 3: Create `vitest.config.ts`**
+- [x] **Step 3: Create `vitest.config.ts`**
 
 ```ts
 import { defineConfig } from 'vitest/config';
@@ -114,7 +117,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 4: Write a smoke test**
+- [x] **Step 4: Write a smoke test**
 
 Create `src/smoke.test.ts`:
 
@@ -128,12 +131,12 @@ describe('smoke', () => {
 });
 ```
 
-- [ ] **Step 5: Run tests to verify Vitest works**
+- [x] **Step 5: Run tests to verify Vitest works**
 
 Run: `npm test`
 Expected: 1 test passes.
 
-- [ ] **Step 6: Delete the smoke test and commit**
+- [x] **Step 6: Delete the smoke test and commit**
 
 ```bash
 rm src/smoke.test.ts
@@ -144,10 +147,11 @@ git commit -m "chore: add vitest"
 ### Task 0.3: Add contributions/settings.json entries
 
 **Files:**
+
 - Modify: `contributions/settings.json`
 - Modify: `contributions/localizedStrings.json`
 
-- [ ] **Step 1: Populate `contributions/settings.json` with Sneeze Board settings**
+- [x] **Step 1: Populate `contributions/settings.json` with Sneeze Board settings**
 
 ```json
 {
@@ -179,7 +183,7 @@ git commit -m "chore: add vitest"
 
 If the localized-key syntax differs in the current `papi-dts` (`contributions/settings.json` schema may have changed), check `../paranext-core/lib/papi-dts/papi.d.ts` for the current `SettingsContribution` type and adjust accordingly — fall back to plain strings (no `%key%` wrappers) if needed for v0.1.
 
-- [ ] **Step 2: Add stub localized strings**
+- [x] **Step 2: Add stub localized strings**
 
 ```json
 {
@@ -194,12 +198,12 @@ If the localized-key syntax differs in the current `papi-dts` (`contributions/se
 }
 ```
 
-- [ ] **Step 3: Build to validate contributions parse**
+- [x] **Step 3: Build to validate contributions parse**
 
 Run: `npm run build`
 Expected: success.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add contributions/
@@ -216,9 +220,10 @@ This phase captures bytes from the real C# client so the TypeScript codec can be
 
 **Files (external — do not commit changes here):** `../SneezeBoard/`
 
-- [ ] **Step 1: Retarget projects to a supported framework**
+- [~] **Step 1: Retarget projects to a supported framework** (SKIPPED - no Visual Studio in agent shell; per plan's STOP guidance, proceeding with documented framing + integration tests)
 
 Open `../SneezeBoard/SneezeBoard.sln` in Visual Studio 2022. If `.NET Framework 4.5.2` isn't installed, the projects won't load. Retarget:
+
 - `SneezeBoardCommon.csproj`: change `<TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>` → `<TargetFrameworkVersion>v4.8</TargetFrameworkVersion>`
 - Same for `SneezeBoardServer.csproj` and `SneezeBoardClient.csproj`
 
@@ -226,7 +231,7 @@ NetworkComms.Net 3.0.3 is .NET Framework only; do **not** try retargeting to .NE
 
 These changes stay in the external repo's working tree — **do not commit them**.
 
-- [ ] **Step 2: Build solution**
+- [~] **Step 2: Build solution** (SKIPPED - no Visual Studio in agent shell)
 
 ```bash
 cd ../SneezeBoard
@@ -236,7 +241,7 @@ msbuild SneezeBoard.sln /p:Configuration=Debug /restore
 If `msbuild` isn't on PATH, use the VS Developer Command Prompt or `"%ProgramFiles%\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"`.
 Expected: `SneezeBoardServer/bin/Debug/SneezeBoardServer.exe` and `SneezeBoardClient/bin/Debug/SneezeBoardClient.exe` exist.
 
-- [ ] **Step 3: Verify server runs**
+- [~] **Step 3: Verify server runs** (SKIPPED - no Visual Studio in agent shell)
 
 ```bash
 cd ../SneezeBoard/SneezeBoardServer/bin/Debug/
@@ -252,9 +257,10 @@ If a `database.xml` doesn't exist, the server creates a Nemo user automatically.
 To capture bytes without Wireshark, run a tiny Node TCP proxy that forwards bytes between client and server, logging each direction. This avoids needing admin privileges.
 
 **Files:**
+
 - Create: `scripts/tcp-tee.mjs`
 
-- [ ] **Step 1: Write the proxy**
+- [x] **Step 1: Write the proxy**
 
 ```js
 // scripts/tcp-tee.mjs
@@ -287,12 +293,16 @@ const server = net.createServer((client) => {
 
   client.on('data', (buf) => {
     c2sStream.write(buf);
-    logStream.write(`[+${Date.now() - startedAt}ms] C->S ${buf.length} bytes: ${buf.toString('hex')}\n`);
+    logStream.write(
+      `[+${Date.now() - startedAt}ms] C->S ${buf.length} bytes: ${buf.toString('hex')}\n`,
+    );
     upstream.write(buf);
   });
   upstream.on('data', (buf) => {
     s2cStream.write(buf);
-    logStream.write(`[+${Date.now() - startedAt}ms] S->C ${buf.length} bytes: ${buf.toString('hex')}\n`);
+    logStream.write(
+      `[+${Date.now() - startedAt}ms] S->C ${buf.length} bytes: ${buf.toString('hex')}\n`,
+    );
     client.write(buf);
   });
 
@@ -317,7 +327,7 @@ server.listen(Number(listenPort), '127.0.0.1', () => {
 });
 ```
 
-- [ ] **Step 2: Smoke test the proxy**
+- [~] **Step 2: Smoke test the proxy** (SKIPPED - requires running C# server/client)
 
 In one terminal: start the SneezeBoardServer (Task 1.1 step 3). In another:
 
@@ -329,7 +339,7 @@ In a third terminal, run the C# client (`SneezeBoardClient.exe`) and enter `127.
 
 Stop all three processes.
 
-- [ ] **Step 3: Commit the proxy script**
+- [x] **Step 3: Commit the proxy script**
 
 ```bash
 git add scripts/tcp-tee.mjs
@@ -341,25 +351,29 @@ git commit -m "tools: add tcp tee proxy for wire format capture"
 The goal of this task is to produce one canonical byte sample for each message type, in both directions. The proxy logs concatenate all bytes per direction per session — extract individual packets after capture.
 
 **Files:**
+
 - Create (committed): `test/fixtures/wire/*.bin` and `test/fixtures/wire/*.log` (plain hex with annotations)
 
-- [ ] **Step 1: Capture an "empty server, connect + database request" session**
+- [~] **Step 1: Capture an "empty server, connect + database request" session** (DEFERRED - see test/fixtures/wire/README.md)
 
 Wipe `test/fixtures/raw/`. Start server with a fresh database (delete `%CommonApplicationData%/SneezeBoard/database*.xml` if needed — back up first if it has real data). Start proxy. Start client, type `127.0.0.1`, click Connect.
 
 Expected bytes:
+
 - C→S: a single `DatabaseRequested` packet (int payload `0`)
 - S→C: a single `DatabaseObject` packet (XML for empty database)
 
 Stop everything. Save:
+
 - `session-1-client-to-server.bin` → `test/fixtures/wire/01-database-requested.bin`
 - `session-1-server-to-client.bin` → `test/fixtures/wire/01-database-object.bin`
 
 Copy the corresponding `.log` file too for inspection.
 
-- [ ] **Step 2: Capture "add user" + "sneeze" + "update sneeze" + "remove sneeze"**
+- [~] **Step 2: Capture "add user" + "sneeze" + "update sneeze" + "remove sneeze"** (DEFERRED)
 
 Restart server + proxy + client. After connecting:
+
 1. Select "New..." in the user dropdown, add a user `TestUser` with a color. Wait for the user to appear.
 2. Click "Sneeze".
 3. Right-click the new sneeze → Edit → enter a comment → OK.
@@ -367,19 +381,19 @@ Restart server + proxy + client. After connecting:
 
 Stop. The session bin contains all messages in order. Save the raw files to `test/fixtures/wire/02-mixed-session-*.bin` and document the byte boundaries in `02-mixed-session-notes.md` by referencing the `.log` timestamps.
 
-- [ ] **Step 3: Capture "two clients" broadcast**
+- [~] **Step 3: Capture "two clients" broadcast** (DEFERRED)
 
 Restart server + proxy. Run two proxies on different listen ports (e.g., 57633 and 57634), each forwarding to 57632. Start two SneezeBoardClient instances, one connecting to 127.0.0.1:57633, one to 127.0.0.1:57634 (the client only accepts an IP; edit `App.config` or use the IP textbox — note that the C# client hardcodes `CommonInfo.ServerPort` (57632). To work around: temporarily change `ServerPort` to `57633` in `SneezeBoardCommon/Messages.cs:23`, rebuild, run client A; revert; rebuild; run client B against 57634.)
 
 If that's awkward, skip this step — coverage from steps 1+2 plus the integration test phase is sufficient. Note "deferred" in the fixture notes.
 
-- [ ] **Step 4: Capture "change color" / `UpdateUser`**
+- [~] **Step 4: Capture "change color" / `UpdateUser`** (DEFERRED)
 
 Restart server + proxy + client. Connect. Click "Change color" for the test user, pick a new color, OK.
 
 Save → `test/fixtures/wire/03-update-user.bin`.
 
-- [ ] **Step 5: Manually annotate the fixtures**
+- [x] **Step 5: Manually annotate the fixtures** (stub README written; will populate when fixtures captured)
 
 Create `test/fixtures/wire/README.md` with:
 
@@ -388,18 +402,18 @@ Create `test/fixtures/wire/README.md` with:
 
 Captured via `scripts/tcp-tee.mjs` against `SneezeBoardServer.exe` (v1, NetworkComms.Net 3.0.3).
 
-| File | Direction | Message type | Source |
-|---|---|---|---|
-| 01-database-requested.bin | C→S | `DatabaseRequested` | First connect from C# client |
-| 01-database-object.bin | S→C | `DatabaseObject` | Server reply, empty DB |
-| 02-mixed-session-c2s.bin | C→S | AddUser, Sneeze, UpdateSneeze, RemoveSneeze | Single session, boundary offsets in notes |
-| 02-mixed-session-s2c.bin | S→C | UserUpdated, PersonSneezed, SneezeUpdated, SneezeRemoved | … |
-| 03-update-user.bin | C→S | `UpdateUser` | Change color |
+| File                      | Direction | Message type                                             | Source                                    |
+| ------------------------- | --------- | -------------------------------------------------------- | ----------------------------------------- |
+| 01-database-requested.bin | C→S       | `DatabaseRequested`                                      | First connect from C# client              |
+| 01-database-object.bin    | S→C       | `DatabaseObject`                                         | Server reply, empty DB                    |
+| 02-mixed-session-c2s.bin  | C→S       | AddUser, Sneeze, UpdateSneeze, RemoveSneeze              | Single session, boundary offsets in notes |
+| 02-mixed-session-s2c.bin  | S→C       | UserUpdated, PersonSneezed, SneezeUpdated, SneezeRemoved | …                                         |
+| 03-update-user.bin        | C→S       | `UpdateUser`                                             | Change color                              |
 
 Reproduce: see `scripts/tcp-tee.mjs` header.
 ```
 
-- [ ] **Step 6: Commit fixtures**
+- [x] **Step 6: Commit fixtures**
 
 ```bash
 git add test/fixtures/
@@ -411,27 +425,30 @@ git commit -m "test(fixtures): capture wire-format byte fixtures from C# client"
 The XML codec needs reference payloads to round-trip against. Extract from the wire fixtures (after Phase 2 implements packet framing, we can decode and dump). For now, capture XML directly from a known-good source: the server's saved `database.xml`.
 
 **Files:**
+
 - Create: `test/fixtures/xml/database-sample.xml`, `test/fixtures/xml/sneeze-record-sample.xml`, `test/fixtures/xml/user-info-sample.xml`
 
-- [ ] **Step 1: Run the server through a representative session, then copy `database.xml`**
+- [~] **Step 1: Run the server through a representative session, then copy `database.xml`** (DEFERRED - synthetic sample fixture used instead)
 
 After Task 1.3, the file at `%CommonApplicationData%/SneezeBoard/database1.xml` (or `database2.xml`) is the latest snapshot. Copy it to `test/fixtures/xml/database-sample.xml`.
 
-- [ ] **Step 2: Hand-craft singleton fixtures**
+- [x] **Step 2: Hand-craft singleton fixtures**
 
 `test/fixtures/xml/user-info-sample.xml`:
+
 ```xml
 <UserInfo userId="c897cd73-9100-4e6a-8a32-fe237f1e9928" color="#FF8800">Tim</UserInfo>
 ```
 
 `test/fixtures/xml/sneeze-record-sample.xml`:
+
 ```xml
 <SneezeRecord userId="c897cd73-9100-4e6a-8a32-fe237f1e9928" date="2024-01-15T18:30:00Z">First sneeze of the day</SneezeRecord>
 ```
 
 These are minimal but match the shape `ServerObject.SerializeToStream` emits. We'll cross-check against extracted bytes from the wire fixtures in Phase 3.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add test/fixtures/xml/
@@ -451,10 +468,11 @@ The framing (v3.0.3): each packet on the wire is `[packetHeaderSize: 1 byte][pac
 ### Task 2.1: Minimal protobuf-net decoder for PacketHeader
 
 **Files:**
+
 - Create: `src/bridge/network-comms/packet-header.ts`
 - Create: `src/bridge/network-comms/packet-header.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // src/bridge/network-comms/packet-header.test.ts
@@ -642,6 +660,7 @@ git commit -m "feat(network-comms): packet header codec"
 ### Task 2.2: Packet framing (header + payload)
 
 **Files:**
+
 - Create: `src/bridge/network-comms/packet.ts`
 - Create: `src/bridge/network-comms/packet.test.ts`
 
@@ -671,7 +690,10 @@ describe('packet framing', () => {
 
   it('round-trips a packet', () => {
     const payload = new TextEncoder().encode('hello');
-    const encoded = encodePacket({ packetType: 'Test', payloadPacketSize: payload.length }, payload);
+    const encoded = encodePacket(
+      { packetType: 'Test', payloadPacketSize: payload.length },
+      payload,
+    );
     const decoded = tryDecodePacket(encoded);
     expect(decoded!.header.packetType).toBe('Test');
     expect(new TextDecoder().decode(decoded!.payload)).toBe('hello');
@@ -679,7 +701,10 @@ describe('packet framing', () => {
 
   it('decodes two consecutive packets from one buffer', () => {
     const p1 = encodePacket({ packetType: 'A', payloadPacketSize: 1 }, new Uint8Array([0x01]));
-    const p2 = encodePacket({ packetType: 'B', payloadPacketSize: 2 }, new Uint8Array([0x02, 0x03]));
+    const p2 = encodePacket(
+      { packetType: 'B', payloadPacketSize: 2 },
+      new Uint8Array([0x02, 0x03]),
+    );
     const joined = new Uint8Array(p1.length + p2.length);
     joined.set(p1);
     joined.set(p2, p1.length);
@@ -756,6 +781,7 @@ git commit -m "feat(network-comms): packet framing codec"
 ### Task 2.3: Verify against all wire fixtures
 
 **Files:**
+
 - Modify: `src/bridge/network-comms/packet.test.ts`
 - Create: `src/bridge/network-comms/all-fixtures.test.ts`
 
@@ -811,6 +837,7 @@ The XML must round-trip with `XmlSerializer` output: no XML declaration, no name
 ### Task 3.1: SneezeRecord XML codec
 
 **Files:**
+
 - Create: `src/bridge/xml/sneeze-record.ts`
 - Create: `src/bridge/xml/sneeze-record.test.ts`
 
@@ -846,7 +873,11 @@ describe('SneezeRecord XML codec', () => {
 
   it('round-trips empty comment', () => {
     const r = { userId: 'a', date: 'b' };
-    expect(decodeSneezeRecord(encodeSneezeRecord(r))).toEqual({ userId: 'a', date: 'b', comment: '' });
+    expect(decodeSneezeRecord(encodeSneezeRecord(r))).toEqual({
+      userId: 'a',
+      date: 'b',
+      comment: '',
+    });
   });
 
   it('encodes special XML characters safely', () => {
@@ -915,6 +946,7 @@ git commit -m "feat(xml): sneeze record codec"
 ### Task 3.2: UserInfo XML codec
 
 **Files:**
+
 - Create: `src/bridge/xml/user-info.ts`
 - Create: `src/bridge/xml/user-info.test.ts`
 
@@ -943,7 +975,8 @@ describe('UserInfo XML codec', () => {
   it('decodes a named-color value into the same string (caller normalizes)', () => {
     // C# may emit color="Sienna" for the built-in Nemo user. Preserve verbatim;
     // the consumer maps known names to #RRGGBB.
-    const xml = '<UserInfo userId="944616BD-20A1-4659-87AF-04563043FFDE" color="Sienna">Nemo</UserInfo>';
+    const xml =
+      '<UserInfo userId="944616BD-20A1-4659-87AF-04563043FFDE" color="Sienna">Nemo</UserInfo>';
     expect(decodeUserInfo(xml).color).toBe('Sienna');
   });
 });
@@ -960,7 +993,7 @@ Expected: FAIL.
 // src/bridge/xml/user-info.ts
 export type UserInfo = {
   userId: string;
-  color: string;  // C# may emit either "#RRGGBB" or a named color token; decoder preserves verbatim.
+  color: string; // C# may emit either "#RRGGBB" or a named color token; decoder preserves verbatim.
   name: string;
 };
 
@@ -968,7 +1001,11 @@ const escapeXml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const unescapeXml = (s: string) =>
-  s.replace(/&quot;/g, '"').replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&');
+  s
+    .replace(/&quot;/g, '"')
+    .replace(/&gt;/g, '>')
+    .replace(/&lt;/g, '<')
+    .replace(/&amp;/g, '&');
 
 export function encodeUserInfo(u: UserInfo): string {
   return `<UserInfo userId="${escapeXml(u.userId)}" color="${escapeXml(u.color)}">${escapeXml(u.name)}</UserInfo>`;
@@ -1004,6 +1041,7 @@ git commit -m "feat(xml): user info codec"
 We only need to **decode** the database (server only sends it; clients never send a full database). Use a small DOM-style parser via the platform `DOMParser` if available, or hand-written. Pick hand-written for predictability.
 
 **Files:**
+
 - Create: `src/bridge/xml/sneeze-database.ts`
 - Create: `src/bridge/xml/sneeze-database.test.ts`
 
@@ -1046,8 +1084,16 @@ describe('SneezeDatabase XML codec', () => {
     expect(db.version).toBe(1);
     expect(db.countdownStart).toBe(100);
     expect(db.sneezes).toHaveLength(2);
-    expect(db.sneezes[0]).toMatchObject({ userId: 'u1', date: '2020-01-01T00:00:00Z', comment: 'first' });
-    expect(db.sneezes[1]).toMatchObject({ userId: 'u2', date: '2020-01-02T00:00:00Z', comment: '' });
+    expect(db.sneezes[0]).toMatchObject({
+      userId: 'u1',
+      date: '2020-01-01T00:00:00Z',
+      comment: 'first',
+    });
+    expect(db.sneezes[1]).toMatchObject({
+      userId: 'u2',
+      date: '2020-01-02T00:00:00Z',
+      comment: '',
+    });
     expect(db.users).toHaveLength(2);
     expect(db.users[0]).toMatchObject({ userId: 'u1', color: '#FF0000', name: 'Alice' });
   });
@@ -1074,7 +1120,11 @@ export type SneezeDatabase = {
 };
 
 const unescapeXml = (s: string) =>
-  s.replace(/&quot;/g, '"').replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&');
+  s
+    .replace(/&quot;/g, '"')
+    .replace(/&gt;/g, '>')
+    .replace(/&lt;/g, '<')
+    .replace(/&amp;/g, '&');
 
 function parseAttr(tag: string, name: string): string | undefined {
   const m = tag.match(new RegExp(`\\b${name}="([^"]*)"`));
@@ -1149,6 +1199,7 @@ git commit -m "feat(xml): sneeze database decoder"
 C# named colors → `#RRGGBB`. Used in the web view; pure function.
 
 **Files:**
+
 - Create: `src/util/color.ts`
 - Create: `src/util/color.test.ts`
 
@@ -1229,6 +1280,7 @@ Ports from `SneezeBoardCommon/SneezeDatabase.cs` and `SneezeBoardClient/SneezeBo
 ### Task 4.1: User stats
 
 **Files:**
+
 - Create: `src/util/stats.ts`
 - Create: `src/util/stats.test.ts`
 
@@ -1322,6 +1374,7 @@ git commit -m "feat(stats): per-user sneeze counts"
 ### Task 4.2: Longest streaks (mirrors C# FindLongestStreaks)
 
 **Files:**
+
 - Modify: `src/util/stats.ts`, `src/util/stats.test.ts`
 
 - [ ] **Step 1: Add test**
@@ -1417,6 +1470,7 @@ git commit -m "feat(stats): longest streaks per user"
 ### Task 4.3: Apocalypse date estimate
 
 **Files:**
+
 - Modify: `src/util/stats.ts`, `src/util/stats.test.ts`
 
 - [ ] **Step 1: Add test**
@@ -1431,7 +1485,9 @@ describe('estimateApocalypseDate', () => {
     const now = new Date('2024-01-08T00:00:00Z');
     const result = estimateApocalypseDate(
       {
-        version: 1, countdownStart: 100, users: [],
+        version: 1,
+        countdownStart: 100,
+        users: [],
         sneezes: [
           { userId: 'u1', date: '2024-01-01T00:00:00Z' },
           { userId: 'u1', date: '2024-01-08T00:00:00Z' },
@@ -1448,7 +1504,12 @@ describe('estimateApocalypseDate', () => {
 
   it('returns "noSneezesInRange" when nothing matches the date range', () => {
     const result = estimateApocalypseDate(
-      { version: 1, countdownStart: 100, users: [], sneezes: [{ userId: 'u1', date: '2020-01-01T00:00:00Z' }] },
+      {
+        version: 1,
+        countdownStart: 100,
+        users: [],
+        sneezes: [{ userId: 'u1', date: '2020-01-01T00:00:00Z' }],
+      },
       'oneWeek',
       new Date('2024-01-01T00:00:00Z'),
     );
@@ -1467,18 +1528,38 @@ Expected: FAIL.
 Append to `src/util/stats.ts`:
 
 ```ts
-export type DateRange = 'oneWeek' | 'twoWeeks' | 'oneMonth' | 'threeMonths' | 'sixMonths' | 'year' | 'allTime';
+export type DateRange =
+  | 'oneWeek'
+  | 'twoWeeks'
+  | 'oneMonth'
+  | 'threeMonths'
+  | 'sixMonths'
+  | 'year'
+  | 'allTime';
 
 function rangeStartDate(range: DateRange, now: Date): Date {
   const d = new Date(now);
   switch (range) {
-    case 'oneWeek': d.setDate(d.getDate() - 7); return d;
-    case 'twoWeeks': d.setDate(d.getDate() - 14); return d;
-    case 'oneMonth': d.setMonth(d.getMonth() - 1); return d;
-    case 'threeMonths': d.setMonth(d.getMonth() - 3); return d;
-    case 'sixMonths': d.setMonth(d.getMonth() - 6); return d;
-    case 'year': d.setFullYear(d.getFullYear() - 1); return d;
-    case 'allTime': return new Date(0);
+    case 'oneWeek':
+      d.setDate(d.getDate() - 7);
+      return d;
+    case 'twoWeeks':
+      d.setDate(d.getDate() - 14);
+      return d;
+    case 'oneMonth':
+      d.setMonth(d.getMonth() - 1);
+      return d;
+    case 'threeMonths':
+      d.setMonth(d.getMonth() - 3);
+      return d;
+    case 'sixMonths':
+      d.setMonth(d.getMonth() - 6);
+      return d;
+    case 'year':
+      d.setFullYear(d.getFullYear() - 1);
+      return d;
+    case 'allTime':
+      return new Date(0);
   }
 }
 
@@ -1523,6 +1604,7 @@ git commit -m "feat(stats): apocalypse date estimate"
 ### Task 5.1: Connection state + send/receive against an in-memory server
 
 **Files:**
+
 - Create: `src/bridge/network-comms/network-comms-client.ts`
 - Create: `src/bridge/network-comms/network-comms-client.test.ts`
 
@@ -1564,7 +1646,9 @@ function makeEchoServer(): Promise<{ port: number; close: () => void }> {
 
 describe('NetworkCommsClient', () => {
   let server: { port: number; close: () => void };
-  beforeEach(async () => { server = await makeEchoServer(); });
+  beforeEach(async () => {
+    server = await makeEchoServer();
+  });
   afterEach(() => server.close());
 
   it('connects, sends a packet, receives the echo', async () => {
@@ -1593,9 +1677,7 @@ describe('NetworkCommsClient', () => {
     const client = new NetworkCommsClient();
     await client.connect('127.0.0.1', server.port);
     // Echo server replies with the SAME packetType, so awaiting a DIFFERENT type times out.
-    await expect(
-      client.sendAndAwait('Ping', 'Pong', 'data', 100),
-    ).rejects.toThrow(/timeout/i);
+    await expect(client.sendAndAwait('Ping', 'Pong', 'data', 100)).rejects.toThrow(/timeout/i);
     client.disconnect();
   });
 });
@@ -1625,7 +1707,10 @@ export class NetworkCommsClient {
 
   on(packetType: string, handler: (payload: string) => void): Unsubscriber {
     let set = this.handlers.get(packetType);
-    if (!set) { set = new Set(); this.handlers.set(packetType, set); }
+    if (!set) {
+      set = new Set();
+      this.handlers.set(packetType, set);
+    }
     set.add(handler);
     return () => set!.delete(handler);
   }
@@ -1645,7 +1730,10 @@ export class NetworkCommsClient {
       this.socket = socket;
       socket.on('data', (chunk) => this.onData(chunk));
       socket.on('close', () => this.setState('closed'));
-      socket.on('error', (err) => { this.setState('error', err.message); reject(err); });
+      socket.on('error', (err) => {
+        this.setState('error', err.message);
+        reject(err);
+      });
     });
   }
 
@@ -1657,11 +1745,19 @@ export class NetworkCommsClient {
   send(packetType: string, payload: string): void {
     if (!this.socket || this.state !== 'open') throw new Error('not connected');
     const payloadBytes = new TextEncoder().encode(payload);
-    const frame = encodePacket({ packetType, payloadPacketSize: payloadBytes.length }, payloadBytes);
+    const frame = encodePacket(
+      { packetType, payloadPacketSize: payloadBytes.length },
+      payloadBytes,
+    );
     this.socket.write(frame);
   }
 
-  sendAndAwait(packetType: string, expectedReply: string, payload: string, timeoutMs = 30000): Promise<string> {
+  sendAndAwait(
+    packetType: string,
+    expectedReply: string,
+    payload: string,
+    timeoutMs = 30000,
+  ): Promise<string> {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         unsub();
@@ -1672,8 +1768,13 @@ export class NetworkCommsClient {
         unsub();
         resolve(reply);
       });
-      try { this.send(packetType, payload); }
-      catch (e) { clearTimeout(timer); unsub(); reject(e); }
+      try {
+        this.send(packetType, payload);
+      } catch (e) {
+        clearTimeout(timer);
+        unsub();
+        reject(e);
+      }
     });
   }
 
@@ -1683,7 +1784,13 @@ export class NetworkCommsClient {
     while (r) {
       const payloadStr = new TextDecoder('utf-8').decode(r.payload);
       const set = this.handlers.get(r.header.packetType);
-      if (set) for (const h of set) try { h(payloadStr); } catch (e) { console.error(e); }
+      if (set)
+        for (const h of set)
+          try {
+            h(payloadStr);
+          } catch (e) {
+            console.error(e);
+          }
       this.rxBuffer = this.rxBuffer.subarray(r.bytesConsumed);
       r = tryDecodePacket(new Uint8Array(this.rxBuffer));
     }
@@ -1691,7 +1798,12 @@ export class NetworkCommsClient {
 
   private setState(s: ConnectionState, err?: string): void {
     this.state = s;
-    for (const l of this.stateListeners) try { l(s, err); } catch (e) { console.error(e); }
+    for (const l of this.stateListeners)
+      try {
+        l(s, err);
+      } catch (e) {
+        console.error(e);
+      }
   }
 }
 ```
@@ -1715,6 +1827,7 @@ git commit -m "feat(network-comms): tcp client with packet routing"
 ### Task 6.1: Bridge IPC types (shared with extension main)
 
 **Files:**
+
 - Create: `src/bridge/ipc-types.ts`
 
 - [ ] **Step 1: Write the file**
@@ -1754,6 +1867,7 @@ git commit -m "feat(bridge): IPC type definitions"
 ### Task 6.2: Bridge entry point
 
 **Files:**
+
 - Create: `src/bridge/index.ts`
 - Create: `src/bridge/index.test.ts`
 
@@ -1776,7 +1890,9 @@ describe('bridge IPC smoke', () => {
     await new Promise<void>((res) => server.listen(0, '127.0.0.1', res));
     const port = (server.address() as net.AddressInfo).port;
 
-    const bridge: ChildProcess = fork(path.resolve('dist/assets/bridge/index.js'), [], { silent: true });
+    const bridge: ChildProcess = fork(path.resolve('dist/assets/bridge/index.js'), [], {
+      silent: true,
+    });
     const events: any[] = [];
     bridge.on('message', (m) => events.push(m));
 
@@ -1791,7 +1907,7 @@ describe('bridge IPC smoke', () => {
 });
 ```
 
-Note: this test runs the *built* `dist/assets/bridge/index.js`. It requires `npm run build` to have run. We'll add the bridge to webpack in Phase 7 and re-enable this test then. For now, mark it as `.skip`:
+Note: this test runs the _built_ `dist/assets/bridge/index.js`. It requires `npm run build` to have run. We'll add the bridge to webpack in Phase 7 and re-enable this test then. For now, mark it as `.skip`:
 
 Change the `describe` to `describe.skip(...)`.
 
@@ -1819,24 +1935,39 @@ function log(level: 'info' | 'warn' | 'error', message: string) {
 client.onState((state, error) => send({ kind: 'state', state, error }));
 
 client.on('DatabaseObject', (xml) => {
-  try { send({ kind: 'database', db: decodeSneezeDatabase(xml) }); }
-  catch (e) { log('error', `decode DatabaseObject: ${(e as Error).message}`); }
+  try {
+    send({ kind: 'database', db: decodeSneezeDatabase(xml) });
+  } catch (e) {
+    log('error', `decode DatabaseObject: ${(e as Error).message}`);
+  }
 });
 client.on('PersonSneezed', (xml) => {
-  try { send({ kind: 'personSneezed', record: decodeSneezeRecord(xml) }); }
-  catch (e) { log('error', `decode PersonSneezed: ${(e as Error).message}`); }
+  try {
+    send({ kind: 'personSneezed', record: decodeSneezeRecord(xml) });
+  } catch (e) {
+    log('error', `decode PersonSneezed: ${(e as Error).message}`);
+  }
 });
 client.on('UserUpdated', (xml) => {
-  try { send({ kind: 'userUpdated', user: decodeUserInfo(xml) }); }
-  catch (e) { log('error', `decode UserUpdated: ${(e as Error).message}`); }
+  try {
+    send({ kind: 'userUpdated', user: decodeUserInfo(xml) });
+  } catch (e) {
+    log('error', `decode UserUpdated: ${(e as Error).message}`);
+  }
 });
 client.on('SneezeUpdated', (xml) => {
-  try { send({ kind: 'sneezeUpdated', record: decodeSneezeRecord(xml) }); }
-  catch (e) { log('error', `decode SneezeUpdated: ${(e as Error).message}`); }
+  try {
+    send({ kind: 'sneezeUpdated', record: decodeSneezeRecord(xml) });
+  } catch (e) {
+    log('error', `decode SneezeUpdated: ${(e as Error).message}`);
+  }
 });
 client.on('SneezeRemoved', (xml) => {
-  try { send({ kind: 'sneezeRemoved', record: decodeSneezeRecord(xml) }); }
-  catch (e) { log('error', `decode SneezeRemoved: ${(e as Error).message}`); }
+  try {
+    send({ kind: 'sneezeRemoved', record: decodeSneezeRecord(xml) });
+  } catch (e) {
+    log('error', `decode SneezeRemoved: ${(e as Error).message}`);
+  }
 });
 
 process.on('message', async (msg: BridgeCommand) => {
@@ -1848,12 +1979,24 @@ process.on('message', async (msg: BridgeCommand) => {
         client.send('DatabaseRequested', '0');
         break;
       }
-      case 'disconnect': client.disconnect(); break;
-      case 'sneeze': client.send('Sneeze', encodeSneezeRecord(msg.record)); break;
-      case 'addUser': client.send('AddUser', encodeUserInfo(msg.user)); break;
-      case 'updateUser': client.send('UpdateUser', encodeUserInfo(msg.user)); break;
-      case 'updateSneeze': client.send('UpdateSneeze', encodeSneezeRecord(msg.record)); break;
-      case 'removeSneeze': client.send('RemoveSneeze', encodeSneezeRecord(msg.record)); break;
+      case 'disconnect':
+        client.disconnect();
+        break;
+      case 'sneeze':
+        client.send('Sneeze', encodeSneezeRecord(msg.record));
+        break;
+      case 'addUser':
+        client.send('AddUser', encodeUserInfo(msg.user));
+        break;
+      case 'updateUser':
+        client.send('UpdateUser', encodeUserInfo(msg.user));
+        break;
+      case 'updateSneeze':
+        client.send('UpdateSneeze', encodeSneezeRecord(msg.record));
+        break;
+      case 'removeSneeze':
+        client.send('RemoveSneeze', encodeSneezeRecord(msg.record));
+        break;
     }
   } catch (e) {
     log('error', `bridge command ${msg.kind} failed: ${(e as Error).message}`);
@@ -1879,6 +2022,7 @@ git commit -m "feat(bridge): entry point with IPC command/event handlers"
 ### Task 7.1: Add bridge webpack config
 
 **Files:**
+
 - Create: `webpack/webpack.config.bridge.ts`
 - Modify: `webpack.config.ts` (root, combines configs)
 - Modify: `package.json` (add `build:bridge` script)
@@ -1907,8 +2051,16 @@ const config: webpack.Configuration = merge(configBase, {
   },
   externals: [
     // Standard Node built-ins remain external (not bundled)
-    'node:net', 'net', 'node:child_process', 'child_process',
-    'node:os', 'os', 'node:path', 'path', 'node:fs', 'fs',
+    'node:net',
+    'net',
+    'node:child_process',
+    'child_process',
+    'node:os',
+    'os',
+    'node:path',
+    'path',
+    'node:fs',
+    'fs',
   ],
   externalsType: 'node-commonjs',
   experiments: { outputModule: false },
@@ -1976,6 +2128,7 @@ git commit -m "build(bridge): add webpack config for bridge bundle"
 ### Task 8.1: Extension state model
 
 **Files:**
+
 - Create: `src/types/paranext-extension-sneeze-board.d.ts` (already exists, extend)
 
 - [ ] **Step 1: Define exported types**
@@ -2027,6 +2180,7 @@ git commit -m "feat(types): declare sneeze board state types"
 ### Task 8.2: Extension main — bridge lifecycle
 
 **Files:**
+
 - Modify: `src/main.ts`
 
 - [ ] **Step 1: Replace main.ts**
@@ -2037,11 +2191,7 @@ import papi, { logger } from '@papi/backend';
 import type { ExecutionActivationContext } from '@papi/core';
 import type { ChildProcess } from 'child_process';
 import { randomUUID } from 'crypto';
-import type {
-  SneezeBoardState,
-  SneezeRecord,
-  UserInfo,
-} from 'paranext-extension-sneeze-board';
+import type { SneezeBoardState, SneezeRecord, UserInfo } from 'paranext-extension-sneeze-board';
 // Bridge IPC types are duplicated here (importing across the host/bridge boundary is
 // awkward; the types are tiny). Keep these in sync with src/bridge/ipc-types.ts.
 type BridgeCommand =
@@ -2068,18 +2218,30 @@ const stateSubscribers = new Set<(s: SneezeBoardState) => void>();
 
 function setState(patch: Partial<SneezeBoardState>) {
   state = { ...state, ...patch };
-  for (const s of stateSubscribers) try { s(state); } catch (e) { logger.error(e); }
+  for (const s of stateSubscribers)
+    try {
+      s(state);
+    } catch (e) {
+      logger.error(e);
+    }
 }
 
 function sendToBridge(cmd: BridgeCommand) {
-  if (!bridge) { logger.warn(`bridge not running; dropping ${cmd.kind}`); return; }
+  if (!bridge) {
+    logger.warn(`bridge not running; dropping ${cmd.kind}`);
+    return;
+  }
   bridge.send(cmd);
 }
 
 function handleBridgeEvent(ev: BridgeEvent) {
   switch (ev.kind) {
-    case 'state': setState({ connection: ev.state, error: ev.error }); break;
-    case 'database': setState({ database: ev.db }); break;
+    case 'state':
+      setState({ connection: ev.state, error: ev.error });
+      break;
+    case 'database':
+      setState({ database: ev.db });
+      break;
     case 'personSneezed': {
       const db = state.database;
       if (db) setState({ database: { ...db, sneezes: [...db.sneezes, ev.record] } });
@@ -2089,9 +2251,10 @@ function handleBridgeEvent(ev: BridgeEvent) {
       const db = state.database;
       if (!db) break;
       const i = db.users.findIndex((u) => u.userId === ev.user.userId);
-      const users = i >= 0
-        ? db.users.map((u) => (u.userId === ev.user.userId ? ev.user : u))
-        : [...db.users, ev.user];
+      const users =
+        i >= 0
+          ? db.users.map((u) => (u.userId === ev.user.userId ? ev.user : u))
+          : [...db.users, ev.user];
       setState({ database: { ...db, users } });
       break;
     }
@@ -2109,7 +2272,9 @@ function handleBridgeEvent(ev: BridgeEvent) {
       setState({ database: { ...db, sneezes } });
       break;
     }
-    case 'log': logger[ev.level](`[bridge] ${ev.message}`); break;
+    case 'log':
+      logger[ev.level](`[bridge] ${ev.message}`);
+      break;
   }
 }
 
@@ -2138,22 +2303,34 @@ export async function activate(context: ExecutionActivationContext) {
     papi.commands.registerCommand('sneezeBoard.disconnect', async () => {
       sendToBridge({ kind: 'disconnect' });
     }),
-    papi.commands.registerCommand('sneezeBoard.sneeze', async (userId: string, comment?: string) => {
-      sendToBridge({ kind: 'sneeze', record: { userId, date: new Date().toISOString(), comment } });
-    }),
+    papi.commands.registerCommand(
+      'sneezeBoard.sneeze',
+      async (userId: string, comment?: string) => {
+        sendToBridge({
+          kind: 'sneeze',
+          record: { userId, date: new Date().toISOString(), comment },
+        });
+      },
+    ),
     papi.commands.registerCommand('sneezeBoard.addUser', async (name: string, color: string) => {
       sendToBridge({ kind: 'addUser', user: { userId: randomUUID(), name, color } });
     }),
-    papi.commands.registerCommand('sneezeBoard.updateUser', async (userId: string, color: string) => {
-      const user = state.database?.users.find((u) => u.userId === userId);
-      if (!user) return;
-      sendToBridge({ kind: 'updateUser', user: { ...user, color } });
-    }),
-    papi.commands.registerCommand('sneezeBoard.updateSneeze', async (date: string, comment: string) => {
-      const record = state.database?.sneezes.find((s) => s.date === date);
-      if (!record) return;
-      sendToBridge({ kind: 'updateSneeze', record: { ...record, comment } });
-    }),
+    papi.commands.registerCommand(
+      'sneezeBoard.updateUser',
+      async (userId: string, color: string) => {
+        const user = state.database?.users.find((u) => u.userId === userId);
+        if (!user) return;
+        sendToBridge({ kind: 'updateUser', user: { ...user, color } });
+      },
+    ),
+    papi.commands.registerCommand(
+      'sneezeBoard.updateSneeze',
+      async (date: string, comment: string) => {
+        const record = state.database?.sneezes.find((s) => s.date === date);
+        if (!record) return;
+        sendToBridge({ kind: 'updateSneeze', record: { ...record, comment } });
+      },
+    ),
     papi.commands.registerCommand('sneezeBoard.removeSneeze', async (date: string) => {
       const record = state.database?.sneezes.find((s) => s.date === date);
       if (!record) return;
@@ -2171,7 +2348,10 @@ export async function activate(context: ExecutionActivationContext) {
     subscribeState: (cb: (s: SneezeBoardState) => void) => {
       stateSubscribers.add(cb);
       cb(state); // emit current immediately
-      const unsub = async () => { stateSubscribers.delete(cb); return true; };
+      const unsub = async () => {
+        stateSubscribers.delete(cb);
+        return true;
+      };
       return Promise.resolve(unsub);
     },
   });
@@ -2179,8 +2359,11 @@ export async function activate(context: ExecutionActivationContext) {
   // Restore current user from settings (if any).
   try {
     const lastSneezerId = await papi.settings.get('sneezeBoard.lastSneezerId');
-    if (typeof lastSneezerId === 'string' && lastSneezerId) setState({ currentUserId: lastSneezerId });
-  } catch (e) { logger.warn(`could not restore lastSneezerId: ${(e as Error).message}`); }
+    if (typeof lastSneezerId === 'string' && lastSneezerId)
+      setState({ currentUserId: lastSneezerId });
+  } catch (e) {
+    logger.warn(`could not restore lastSneezerId: ${(e as Error).message}`);
+  }
 
   context.registrations.add(...unsubs);
   context.registrations.add(stateNetworkObject.dispose);
@@ -2216,6 +2399,7 @@ git commit -m "feat(main): bridge lifecycle, commands, networkObject"
 ### Task 8.3: Web view provider (placeholder content)
 
 **Files:**
+
 - Modify: `src/main.ts`
 - Create: `src/web-views/sneeze-board.web-view.tsx`
 - Create: `src/web-views/sneeze-board.web-view.scss`
@@ -2313,6 +2497,7 @@ This phase iterates over the user-visible UI. Tasks 9.1-9.6 each ship a working 
 ### Task 9.1: NetworkObject hook
 
 **Files:**
+
 - Create: `src/web-views/use-sneeze-board-state.ts`
 
 - [ ] **Step 1: Implement the hook**
@@ -2321,7 +2506,10 @@ This phase iterates over the user-visible UI. Tasks 9.1-9.6 each ship a working 
 // src/web-views/use-sneeze-board-state.ts
 import { useEffect, useState } from 'react';
 import papi from '@papi/frontend';
-import type { SneezeBoardState, SneezeBoardStateNetworkObject } from 'paranext-extension-sneeze-board';
+import type {
+  SneezeBoardState,
+  SneezeBoardStateNetworkObject,
+} from 'paranext-extension-sneeze-board';
 
 export function useSneezeBoardState(): SneezeBoardState {
   const [state, setState] = useState<SneezeBoardState>({ connection: 'idle' });
@@ -2334,7 +2522,10 @@ export function useSneezeBoardState(): SneezeBoardState {
       if (cancelled || !obj) return;
       unsub = await obj.subscribeState((s) => setState(s));
     })();
-    return () => { cancelled = true; if (unsub) unsub(); };
+    return () => {
+      cancelled = true;
+      if (unsub) unsub();
+    };
   }, []);
 
   return state;
@@ -2353,6 +2544,7 @@ git commit -m "feat(web-view): hook for sneeze board state"
 ### Task 9.2: Connection bar
 
 **Files:**
+
 - Create: `src/web-views/components/connection-bar.tsx`
 - Modify: `src/web-views/sneeze-board.web-view.tsx`
 
@@ -2365,7 +2557,11 @@ import papi from '@papi/frontend';
 import { Button, Input } from 'platform-bible-react';
 import type { ConnectionState } from 'paranext-extension-sneeze-board';
 
-export function ConnectionBar({ connection, error, defaultIp }: {
+export function ConnectionBar({
+  connection,
+  error,
+  defaultIp,
+}: {
   connection: ConnectionState;
   error?: string;
   defaultIp: string;
@@ -2374,16 +2570,23 @@ export function ConnectionBar({ connection, error, defaultIp }: {
   const connect = () => papi.commands.sendCommand('sneezeBoard.connect', ip);
   const disconnect = () => papi.commands.sendCommand('sneezeBoard.disconnect');
   const label =
-    connection === 'open' ? 'Connected'
-    : connection === 'connecting' ? 'Connecting…'
-    : connection === 'error' ? `Failed: ${error ?? 'unknown'}`
-    : connection === 'closed' ? 'Disconnected' : 'Idle';
+    connection === 'open'
+      ? 'Connected'
+      : connection === 'connecting'
+        ? 'Connecting…'
+        : connection === 'error'
+          ? `Failed: ${error ?? 'unknown'}`
+          : connection === 'closed'
+            ? 'Disconnected'
+            : 'Idle';
   return (
     <div className="sneeze-board__connection-bar">
       <Input value={ip} onChange={(e) => setIp(e.target.value)} placeholder="Server IP" />
-      {connection === 'open'
-        ? <Button onClick={disconnect}>Disconnect</Button>
-        : <Button onClick={connect}>Connect</Button>}
+      {connection === 'open' ? (
+        <Button onClick={disconnect}>Disconnect</Button>
+      ) : (
+        <Button onClick={connect}>Connect</Button>
+      )}
       <span className="sneeze-board__status">{label}</span>
     </div>
   );
@@ -2405,14 +2608,21 @@ globalThis.webViewComponent = function SneezeBoardWebView() {
   const state = useSneezeBoardState();
   const [serverIp, setServerIp] = useState('');
   useEffect(() => {
-    papi.settings.get('sneezeBoard.serverIp').then((ip) => { if (typeof ip === 'string') setServerIp(ip); });
+    papi.settings.get('sneezeBoard.serverIp').then((ip) => {
+      if (typeof ip === 'string') setServerIp(ip);
+    });
   }, []);
   return (
     <div className="sneeze-board">
       <ConnectionBar connection={state.connection} error={state.error} defaultIp={serverIp} />
-      {state.database
-        ? <p>Database loaded: {state.database.sneezes.length} sneezes, {state.database.users.length} users.</p>
-        : <p>No database loaded.</p>}
+      {state.database ? (
+        <p>
+          Database loaded: {state.database.sneezes.length} sneezes, {state.database.users.length}{' '}
+          users.
+        </p>
+      ) : (
+        <p>No database loaded.</p>
+      )}
     </div>
   );
 };
@@ -2434,6 +2644,7 @@ git commit -m "feat(web-view): connection bar with live state"
 The grid is the centerpiece. Renders `countdownStart - index` numbers in column-major order, colored per user. Use plain CSS Grid (or absolute positioning) — no library needed.
 
 **Files:**
+
 - Create: `src/web-views/components/sneeze-grid.tsx`
 - Create: `src/web-views/components/sneeze-grid.scss`
 - Modify: `src/web-views/sneeze-board.web-view.tsx`
@@ -2448,7 +2659,12 @@ import { normalizeColor } from '../../util/color';
 
 const CELL_PADDING_X = 10;
 
-export function SneezeGrid({ database, fontSize, backgroundColor, onSneezeAction }: {
+export function SneezeGrid({
+  database,
+  fontSize,
+  backgroundColor,
+  onSneezeAction,
+}: {
   database: SneezeDatabase;
   fontSize: number;
   backgroundColor: string;
@@ -2473,13 +2689,17 @@ export function SneezeGrid({ database, fontSize, backgroundColor, onSneezeAction
 
   const lineHeight = Math.ceil(fontSize * 1.2);
   const rowsPerColumn = Math.max(1, Math.floor(containerHeight / lineHeight));
-  const cellWidth = String(database.countdownStart).length * Math.ceil(fontSize * 0.62) + CELL_PADDING_X;
+  const cellWidth =
+    String(database.countdownStart).length * Math.ceil(fontSize * 0.62) + CELL_PADDING_X;
   const totalColumns = Math.ceil(database.sneezes.length / rowsPerColumn);
   const totalWidth = totalColumns * cellWidth;
 
   return (
     <div ref={containerRef} className="sneeze-grid" style={{ background: backgroundColor }}>
-      <div className="sneeze-grid__inner" style={{ width: totalWidth, height: '100%', position: 'relative' }}>
+      <div
+        className="sneeze-grid__inner"
+        style={{ width: totalWidth, height: '100%', position: 'relative' }}
+      >
         {database.sneezes.map((s, i) => {
           const col = Math.floor(i / rowsPerColumn);
           const row = i % rowsPerColumn;
@@ -2496,7 +2716,10 @@ export function SneezeGrid({ database, fontSize, backgroundColor, onSneezeAction
                 fontSize: `${fontSize}px`,
                 lineHeight: `${lineHeight}px`,
               }}
-              onContextMenu={(e) => { e.preventDefault(); onSneezeAction(s, i); }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                onSneezeAction(s, i);
+              }}
               title={`Sneeze ${sneezeNum}\n${s.date}${s.comment ? `\n\n${s.comment}` : ''}`}
             >
               {sneezeNum}
@@ -2522,7 +2745,9 @@ export function SneezeGrid({ database, fontSize, backgroundColor, onSneezeAction
   position: absolute;
   font-family: monospace;
   padding: 0 2px;
-  &.has-comment { outline: 1px solid goldenrod; }
+  &.has-comment {
+    outline: 1px solid goldenrod;
+  }
 }
 ```
 
@@ -2534,17 +2759,19 @@ In `sneeze-board.web-view.tsx`:
 import { SneezeGrid } from './components/sneeze-grid';
 import './components/sneeze-grid.scss';
 // In the component body, replace the placeholder paragraph:
-{state.database && (
-  <SneezeGrid
-    database={state.database}
-    fontSize={14}
-    backgroundColor="#FFF"
-    onSneezeAction={(s) => {
-      // Phase 9.5 wires this to an action menu
-      console.log('sneeze right-clicked', s);
-    }}
-  />
-)}
+{
+  state.database && (
+    <SneezeGrid
+      database={state.database}
+      fontSize={14}
+      backgroundColor="#FFF"
+      onSneezeAction={(s) => {
+        // Phase 9.5 wires this to an action menu
+        console.log('sneeze right-clicked', s);
+      }}
+    />
+  );
+}
 ```
 
 - [ ] **Step 3: Build + smoke test**
@@ -2563,6 +2790,7 @@ git commit -m "feat(web-view): sneeze grid component"
 ### Task 9.4: User picker + add user + change color
 
 **Files:**
+
 - Create: `src/web-views/components/user-bar.tsx`
 - Modify: `src/web-views/sneeze-board.web-view.tsx`
 
@@ -2572,11 +2800,23 @@ git commit -m "feat(web-view): sneeze grid component"
 // src/web-views/components/user-bar.tsx
 import { useState } from 'react';
 import papi from '@papi/frontend';
-import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from 'platform-bible-react';
+import {
+  Button,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from 'platform-bible-react';
 import type { UserInfo } from 'paranext-extension-sneeze-board';
 import { normalizeColor } from '../../util/color';
 
-export function UserBar({ users, currentUserId, onSneeze }: {
+export function UserBar({
+  users,
+  currentUserId,
+  onSneeze,
+}: {
   users: UserInfo[];
   currentUserId?: string;
   onSneeze: (userId: string, comment: string) => void;
@@ -2591,36 +2831,63 @@ export function UserBar({ users, currentUserId, onSneeze }: {
 
   return (
     <div className="sneeze-board__user-bar">
-      <Select value={currentUserId ?? ''} onValueChange={(v) => papi.commands.sendCommand('sneezeBoard.setCurrentUser', v)}>
-        <SelectTrigger><SelectValue placeholder="Select user" /></SelectTrigger>
+      <Select
+        value={currentUserId ?? ''}
+        onValueChange={(v) => papi.commands.sendCommand('sneezeBoard.setCurrentUser', v)}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Select user" />
+        </SelectTrigger>
         <SelectContent>
           {users.map((u) => (
-            <SelectItem key={u.userId} value={u.userId}>{u.name}</SelectItem>
+            <SelectItem key={u.userId} value={u.userId}>
+              {u.name}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>
       <span className="sneeze-board__swatch" style={{ background: colorSwatch }} />
-      <Button onClick={() => {
-        if (!currentUser) return;
-        const next = prompt('New color (#RRGGBB):', colorSwatch);
-        if (next) papi.commands.sendCommand('sneezeBoard.updateUser', currentUser.userId, next);
-      }}>Change color</Button>
+      <Button
+        onClick={() => {
+          if (!currentUser) return;
+          const next = prompt('New color (#RRGGBB):', colorSwatch);
+          if (next) papi.commands.sendCommand('sneezeBoard.updateUser', currentUser.userId, next);
+        }}
+      >
+        Change color
+      </Button>
       <Input placeholder="Comment" value={comment} onChange={(e) => setComment(e.target.value)} />
-      <Button disabled={!currentUserId} onClick={() => {
-        if (!currentUserId) return;
-        onSneeze(currentUserId, comment);
-        setComment('');
-      }}>Sneeze</Button>
-      <Button variant="ghost" onClick={() => setShowAddUser((s) => !s)}>+ User</Button>
+      <Button
+        disabled={!currentUserId}
+        onClick={() => {
+          if (!currentUserId) return;
+          onSneeze(currentUserId, comment);
+          setComment('');
+        }}
+      >
+        Sneeze
+      </Button>
+      <Button variant="ghost" onClick={() => setShowAddUser((s) => !s)}>
+        + User
+      </Button>
       {showAddUser && (
         <span>
-          <Input placeholder="New name" value={newName} onChange={(e) => setNewName(e.target.value)} />
+          <Input
+            placeholder="New name"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+          />
           <input type="color" value={newColor} onChange={(e) => setNewColor(e.target.value)} />
-          <Button onClick={() => {
-            if (!newName) return;
-            papi.commands.sendCommand('sneezeBoard.addUser', newName, newColor);
-            setNewName(''); setShowAddUser(false);
-          }}>Add</Button>
+          <Button
+            onClick={() => {
+              if (!newName) return;
+              papi.commands.sendCommand('sneezeBoard.addUser', newName, newColor);
+              setNewName('');
+              setShowAddUser(false);
+            }}
+          >
+            Add
+          </Button>
         </span>
       )}
     </div>
@@ -2633,13 +2900,17 @@ export function UserBar({ users, currentUserId, onSneeze }: {
 In `sneeze-board.web-view.tsx`, between `ConnectionBar` and `SneezeGrid`:
 
 ```tsx
-{state.database && (
-  <UserBar
-    users={state.database.users}
-    currentUserId={state.currentUserId}
-    onSneeze={(userId, comment) => papi.commands.sendCommand('sneezeBoard.sneeze', userId, comment)}
-  />
-)}
+{
+  state.database && (
+    <UserBar
+      users={state.database.users}
+      currentUserId={state.currentUserId}
+      onSneeze={(userId, comment) =>
+        papi.commands.sendCommand('sneezeBoard.sneeze', userId, comment)
+      }
+    />
+  );
+}
 ```
 
 If `platform-bible-react` doesn't export `Select`/`SelectTrigger` (shadcn naming may differ), inspect `../paranext-core/lib/platform-bible-react/dist/index.js` or use a native `<select>`.
@@ -2658,6 +2929,7 @@ git commit -m "feat(web-view): user picker, add user, change color, sneeze actio
 ### Task 9.5: Sneeze edit/remove context menu
 
 **Files:**
+
 - Modify: `src/web-views/sneeze-board.web-view.tsx`
 
 - [ ] **Step 1: Wire `onSneezeAction` to a simple action**
@@ -2693,6 +2965,7 @@ git commit -m "feat(web-view): sneeze edit/remove via right-click prompt"
 ### Task 9.6: Apocalypse line + stats dialog
 
 **Files:**
+
 - Modify: `src/web-views/sneeze-board.web-view.tsx`
 
 - [ ] **Step 1: Add apocalypse line**
@@ -2702,11 +2975,14 @@ Above the grid:
 ```tsx
 import { estimateApocalypseDate } from '../util/stats';
 // In the JSX:
-{state.database && (() => {
-  const result = estimateApocalypseDate(state.database, 'allTime');
-  const text = result === 'noSneezesInRange' ? 'No sneezes in range' : result.toLocaleString();
-  return <p>Estimated final sneeze date: {text}</p>;
-})()}
+{
+  state.database &&
+    (() => {
+      const result = estimateApocalypseDate(state.database, 'allTime');
+      const text = result === 'noSneezesInRange' ? 'No sneezes in range' : result.toLocaleString();
+      return <p>Estimated final sneeze date: {text}</p>;
+    })();
+}
 ```
 
 If sneezes count >= countdownStart, also show: `<p style={{ color: 'gold', fontWeight: 'bold' }}>We win!</p>`.
@@ -2718,33 +2994,45 @@ import { findLongestStreaks, findUserStats } from '../util/stats';
 // Add to existing imports: useState; place this hook at the top of the component:
 const [showStats, setShowStats] = useState(false);
 // In the JSX:
-<Button variant="ghost" onClick={() => setShowStats(true)}>Stats</Button>
-{showStats && state.database && (
-  <div className="sneeze-board__stats-overlay" onClick={() => setShowStats(false)}>
-    <div className="sneeze-board__stats" onClick={(e) => e.stopPropagation()}>
-      <h3>Stats</h3>
-      <h4>Longest streaks</h4>
-      <ul>
-        {[...findLongestStreaks(state.database).entries()]
-          .sort((a, b) => b[1] - a[1])
-          .map(([userId, streak]) => {
-            const user = state.database!.users.find((u) => u.userId === userId);
-            return <li key={userId}>{user?.name ?? userId}: {streak}</li>;
-          })}
-      </ul>
-      <h4>Sneeze counts</h4>
-      <ul>
-        {[...findUserStats(state.database).entries()]
-          .sort((a, b) => b[1].totalSneezes - a[1].totalSneezes)
-          .map(([userId, s]) => {
-            const user = state.database!.users.find((u) => u.userId === userId);
-            return <li key={userId}>{user?.name ?? userId}: {s.totalSneezes}</li>;
-          })}
-      </ul>
-      <Button onClick={() => setShowStats(false)}>Close</Button>
+<Button variant="ghost" onClick={() => setShowStats(true)}>
+  Stats
+</Button>;
+{
+  showStats && state.database && (
+    <div className="sneeze-board__stats-overlay" onClick={() => setShowStats(false)}>
+      <div className="sneeze-board__stats" onClick={(e) => e.stopPropagation()}>
+        <h3>Stats</h3>
+        <h4>Longest streaks</h4>
+        <ul>
+          {[...findLongestStreaks(state.database).entries()]
+            .sort((a, b) => b[1] - a[1])
+            .map(([userId, streak]) => {
+              const user = state.database!.users.find((u) => u.userId === userId);
+              return (
+                <li key={userId}>
+                  {user?.name ?? userId}: {streak}
+                </li>
+              );
+            })}
+        </ul>
+        <h4>Sneeze counts</h4>
+        <ul>
+          {[...findUserStats(state.database).entries()]
+            .sort((a, b) => b[1].totalSneezes - a[1].totalSneezes)
+            .map(([userId, s]) => {
+              const user = state.database!.users.find((u) => u.userId === userId);
+              return (
+                <li key={userId}>
+                  {user?.name ?? userId}: {s.totalSneezes}
+                </li>
+              );
+            })}
+        </ul>
+        <Button onClick={() => setShowStats(false)}>Close</Button>
+      </div>
     </div>
-  </div>
-)}
+  );
+}
 ```
 
 - [ ] **Step 3: Add minimal CSS**
@@ -2753,9 +3041,20 @@ Append to `sneeze-grid.scss` (or a new file):
 
 ```scss
 .sneeze-board__stats-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.sneeze-board__stats { background: white; padding: 24px; min-width: 300px; max-height: 80vh; overflow: auto; }
+.sneeze-board__stats {
+  background: white;
+  padding: 24px;
+  min-width: 300px;
+  max-height: 80vh;
+  overflow: auto;
+}
 ```
 
 - [ ] **Step 4: Build + smoke test**
@@ -2776,6 +3075,7 @@ git commit -m "feat(web-view): apocalypse line and stats overlay"
 ### Task 10.1: Integration test
 
 **Files:**
+
 - Create: `test/integration/sneeze-board.integration.test.ts`
 
 - [ ] **Step 1: Write the test**
@@ -2801,20 +3101,28 @@ describe.skipIf(!runIntegration)('integration: real SneezeBoardServer', () => {
     await new Promise<void>((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error('server boot timeout')), 10_000);
       server.stdout!.on('data', (d) => {
-        if (d.toString().includes('listening')) { clearTimeout(timer); resolve(); }
+        if (d.toString().includes('listening')) {
+          clearTimeout(timer);
+          resolve();
+        }
       });
       server.on('error', reject);
     });
   }, 15_000);
 
-  afterAll(() => { server?.kill(); });
+  afterAll(() => {
+    server?.kill();
+  });
 
   it('connects, requests database, receives a SneezeDatabase reply', async () => {
     const client = new NetworkCommsClient();
     const gotDb = new Promise<string>((resolve) => client.on('DatabaseObject', resolve));
     await client.connect('127.0.0.1', PORT);
     client.send('DatabaseRequested', '0');
-    const xml = await Promise.race([gotDb, new Promise<string>((_, r) => setTimeout(() => r(new Error('timeout')), 5000))]);
+    const xml = await Promise.race([
+      gotDb,
+      new Promise<string>((_, r) => setTimeout(() => r(new Error('timeout')), 5000)),
+    ]);
     const db = decodeSneezeDatabase(xml);
     expect(db.version).toBeGreaterThan(0);
     client.disconnect();
@@ -2826,20 +3134,29 @@ describe.skipIf(!runIntegration)('integration: real SneezeBoardServer', () => {
     await client.connect('127.0.0.1', PORT);
 
     // Need a user first
-    client.send('AddUser', encodeUserInfo({
-      userId: '00000000-0000-0000-0000-000000000123',
-      color: '#ABCDEF',
-      name: 'Integration',
-    }));
+    client.send(
+      'AddUser',
+      encodeUserInfo({
+        userId: '00000000-0000-0000-0000-000000000123',
+        color: '#ABCDEF',
+        name: 'Integration',
+      }),
+    );
     await new Promise((r) => setTimeout(r, 200));
 
     const date = new Date().toISOString();
-    client.send('Sneeze', encodeSneezeRecord({
-      userId: '00000000-0000-0000-0000-000000000123',
-      date,
-      comment: 'integration test',
-    }));
-    const echoXml = await Promise.race([personSneezed, new Promise<string>((_, r) => setTimeout(() => r(new Error('timeout')), 5000))]);
+    client.send(
+      'Sneeze',
+      encodeSneezeRecord({
+        userId: '00000000-0000-0000-0000-000000000123',
+        date,
+        comment: 'integration test',
+      }),
+    );
+    const echoXml = await Promise.race([
+      personSneezed,
+      new Promise<string>((_, r) => setTimeout(() => r(new Error('timeout')), 5000)),
+    ]);
     expect(echoXml).toContain('integration test');
     client.disconnect();
   });
@@ -2857,6 +3174,7 @@ RUN_INTEGRATION=1 npm test -- integration
 Expected: 2 tests PASS.
 
 **If the `DatabaseRequested` reply never arrives or arrives with garbled content:** the wire format for the `int 0` payload is wrong. Try alternatives in order:
+
 1. Send 4 bytes little-endian `00 00 00 00` as the payload (raw int).
 2. Send protobuf-encoded `int` (a single zero byte).
 3. Send empty payload.
@@ -2877,13 +3195,14 @@ git commit -m "test(integration): real server connection round-trip"
 ### Task 11.1: README
 
 **Files:**
+
 - Modify: `README.md`
 
 - [ ] **Step 1: Replace the template README with sneeze-board-specific docs**
 
 Use this skeleton:
 
-```markdown
+````markdown
 # paranext-extension-sneeze-board
 
 A Platform.Bible extension that connects to the SIL Sneeze Board server.
@@ -2899,6 +3218,7 @@ npm install
 npm run build
 npm run start  # runs Platform.Bible with the extension loaded
 ```
+````
 
 ## Test
 
@@ -2912,14 +3232,15 @@ RUN_INTEGRATION=1 npm test   # also runs integration tests against a local Sneez
 ```bash
 npm run package              # produces release/paranext-extension-sneeze-board_<ver>.zip
 ```
-```
+
+````
 
 - [ ] **Step 2: Commit**
 
 ```bash
 git add README.md
 git commit -m "docs: replace template README with sneeze-board docs"
-```
+````
 
 ### Task 11.2: Final manual smoke
 
@@ -2928,6 +3249,7 @@ git commit -m "docs: replace template README with sneeze-board docs"
 Run: `npm run build && npm run start`.
 
 In Platform.Bible:
+
 1. Open the Sneeze Board web view.
 2. Type `127.0.0.1` and Connect (with the local SneezeBoardServer running).
 3. Verify "Connected" status appears.
@@ -2957,11 +3279,45 @@ git tag v0.0.1
 
 Before declaring the plan complete, verify:
 
-- [ ] Every spec §11 in-scope item has a corresponding task.
-- [ ] Build (`npm run build`), typecheck (`npm run typecheck`), tests (`npm test`), and `npm run lint` all pass green.
-- [ ] Integration tests pass when `RUN_INTEGRATION=1`.
-- [ ] Manual smoke (Task 11.2) all 10 steps work end-to-end.
-- [ ] No `TODO`/`TBD`/`fixme` left in the codebase outside `docs/`.
-- [ ] All commits are atomic and have conventional commit messages.
+- [x] Every spec §11 in-scope item has a corresponding task.
+- [x] Build (`npm run build`), typecheck (`npm run typecheck`), tests (`npm test`), and `npm run lint` all pass green.
+- [~] Integration tests pass when `RUN_INTEGRATION=1`. (DEFERRED — requires running C# server; tests are written and auto-skip when env var/binary not present)
+- [~] Manual smoke (Task 11.2) all 10 steps work end-to-end. (DEFERRED — requires interactive Platform.Bible + C# server)
+- [x] No `TODO`/`TBD`/`fixme` left in the codebase outside `docs/`.
+- [x] All commits are atomic and have conventional commit messages.
 
 If any of those fail, STOP and report to the user with the specific failure — do not silently skip or work around.
+
+---
+
+## Execution summary (2026-05-14)
+
+Phases 0, 2, 3, 4, 5, 6, 7, 8, 9, 11 are fully implemented and verified
+(`npm test`, `npm run typecheck`, `npm run build`, `npm run lint` all green).
+
+Phase 1 (wire-format fixture capture) and Phase 10 (real-server integration
+test execution) are **deferred**: the agent shell did not have access to the
+.NET Framework 4.5.2 toolchain or Visual Studio required to build the C#
+`SneezeBoardServer` / `SneezeBoardClient`. The plan explicitly anticipates
+this case. Concrete artifacts produced:
+
+- `scripts/tcp-tee.mjs` — the byte-capture proxy is in place.
+- `test/fixtures/wire/README.md` — documents how to capture canonical wire
+  fixtures when the C# toolchain is available.
+- `test/fixtures/xml/*.xml` — hand-crafted XML payload fixtures.
+- `test/integration/sneeze-board.integration.test.ts` — gated by
+  `RUN_INTEGRATION=1` env var **and** existence of
+  `../SneezeBoard/SneezeBoardServer/bin/Debug/SneezeBoardServer.exe`.
+  Auto-skips when either condition is false.
+
+The codec was therefore implemented from documented NetworkComms.Net 3.0.3
+framing (`[1-byte header length][protobuf header][payload]`). Real-server
+divergence (if any) will surface when the integration test is first run
+against a live `SneezeBoardServer.exe`.
+
+The `DatabaseRequested` payload is currently sent as UTF-8 string `"0"`
+(see `src/bridge/index.ts`). The real C# client sends a protobuf-net-wrapped
+`int` payload. If the real server rejects this, the next step is to capture
+the C# client's `DatabaseRequested` bytes via `scripts/tcp-tee.mjs` and
+either (a) send those bytes verbatim via a new `sendBinary` API on
+`NetworkCommsClient`, or (b) confirm the server tolerates UTF-8 `"0"`.

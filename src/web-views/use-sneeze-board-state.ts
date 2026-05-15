@@ -12,9 +12,7 @@ export function useSneezeBoardState(): SneezeBoardState {
     let unsub: undefined | (() => Promise<boolean>);
     let cancelled = false;
     (async () => {
-      const obj = await papi.networkObjects.get<SneezeBoardStateNetworkObject>(
-        'sneezeBoard.state',
-      );
+      const obj = await papi.networkObjects.get<SneezeBoardStateNetworkObject>('sneezeBoard.state');
       if (cancelled || !obj) return;
       unsub = await obj.subscribeState((s) => setState(s));
     })();

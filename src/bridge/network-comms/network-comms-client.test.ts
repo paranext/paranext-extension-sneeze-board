@@ -28,8 +28,8 @@ function makeEchoServer(): Promise<{ port: number; close: () => Promise<void> }>
       resolve({
         port,
         close: () =>
-          new Promise<void>((res) => {
-            server.close(() => res());
+          new Promise<void>((resolve) => {
+            server.close(() => resolve());
           }),
       });
     });
@@ -61,8 +61,8 @@ describe('NetworkCommsClient', () => {
     await client.connect('127.0.0.1', server.port);
     expect(states).toEqual(['connecting', 'open']);
     client.disconnect();
-    await new Promise((r) => {
-      setTimeout(r, 50);
+    await new Promise((resolve) => {
+      setTimeout(resolve, 50);
     });
     expect(states).toContain('closed');
   });

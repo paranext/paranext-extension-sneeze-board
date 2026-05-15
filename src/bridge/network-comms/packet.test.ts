@@ -17,10 +17,7 @@ describe('packet framing', () => {
 
   it('returns null when buffer is incomplete', () => {
     const payload = new TextEncoder().encode('hello world');
-    const packet = encodePacket(
-      { packetType: 'Test', payloadPacketSize: payload.length },
-      payload,
-    );
+    const packet = encodePacket({ packetType: 'Test', payloadPacketSize: payload.length }, payload);
     const partial = packet.subarray(0, packet.length - 1);
     expect(tryDecodePacket(partial)).toBeNull();
   });

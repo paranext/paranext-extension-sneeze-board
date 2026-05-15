@@ -22,9 +22,7 @@ function SneezeBoardWebView() {
     if (!state.database) return null;
     const result = estimateApocalypseDate(state.database, 'allTime');
     const text =
-      result === 'noSneezesInRange'
-        ? 'No sneezes in range'
-        : (result as Date).toLocaleString();
+      result === 'noSneezesInRange' ? 'No sneezes in range' : (result as Date).toLocaleString();
     return <p>Estimated final sneeze date: {text}</p>;
   })();
 
@@ -35,11 +33,7 @@ function SneezeBoardWebView() {
 
   return (
     <div className="sneeze-board">
-      <ConnectionBar
-        connection={state.connection}
-        error={state.error}
-        defaultIp={serverIp}
-      />
+      <ConnectionBar connection={state.connection} error={state.error} defaultIp={serverIp} />
       {state.database && (
         <UserBar
           users={state.database.users}
@@ -62,10 +56,7 @@ function SneezeBoardWebView() {
           onSneezeAction={(s) => {
             if (s.userId !== state.currentUserId) return; // own sneezes only
             // eslint-disable-next-line no-alert
-            const action = window.prompt(
-              `Sneeze options: [E]dit comment or [R]emove?`,
-              'E',
-            );
+            const action = window.prompt(`Sneeze options: [E]dit comment or [R]emove?`, 'E');
             if (!action) return;
             if (action.toUpperCase() === 'E') {
               // eslint-disable-next-line no-alert

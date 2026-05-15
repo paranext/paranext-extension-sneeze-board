@@ -182,6 +182,56 @@ module.exports = {
         'import/no-self-import': 'off',
       },
     },
+    {
+      // Bridge protobuf / binary protocol code legitimately needs bitwise ops.
+      files: ['src/bridge/network-comms/**/*.ts'],
+      rules: {
+        'no-bitwise': 'off',
+        'no-plusplus': 'off',
+      },
+    },
+    {
+      // Bridge / main use null sentinels from Node API surface (regex .match returns null, etc.).
+      // Also use `as` for IPC message types and webview side-effect assignment.
+      files: ['src/bridge/**/*.ts', 'src/main.ts', 'src/web-views/**/*.{ts,tsx}'],
+      rules: {
+        'no-null/no-null': 'off',
+        'no-type-assertion/no-type-assertion': 'off',
+        '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+        'no-nested-ternary': 'off',
+        'no-restricted-syntax': 'off',
+        'promise/catch-or-return': 'off',
+        'promise/always-return': 'off',
+      },
+    },
+    {
+      // Test files use ! non-null assertions extensively.
+      files: ['**/*.test.ts', '**/*.test.tsx'],
+      rules: {
+        'no-type-assertion/no-type-assertion': 'off',
+        '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+        'import/order': 'off',
+        '@typescript-eslint/no-shadow': 'off',
+      },
+    },
+    {
+      // Stats utilities iterate over Map.entries() and arrays via for-of for clarity.
+      files: ['src/util/**/*.ts'],
+      rules: {
+        'no-restricted-syntax': 'off',
+        'no-plusplus': 'off',
+        'no-type-assertion/no-type-assertion': 'off',
+        '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+      },
+    },
+    {
+      // Webpack configs may use intentional path-separator regex escapes.
+      files: ['webpack/**/*.ts', 'vitest.config.ts'],
+      rules: {
+        'no-useless-escape': 'off',
+        'import/no-anonymous-default-export': 'off',
+      },
+    },
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {

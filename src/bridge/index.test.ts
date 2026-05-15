@@ -18,16 +18,18 @@ describe.skipIf(!bundleExists)('bridge IPC smoke', () => {
       // Swallow client-side close/reset so vitest doesn't see unhandled errors.
       socket.on('error', () => {});
     });
-    await new Promise<void>((res) => server.listen(0, '127.0.0.1', res));
-    const port = (server.address() as net.AddressInfo).port;
+    await new Promise<void>((resolve) => {
+      server.listen(0, '127.0.0.1', resolve);
+    });
+    const { port } = server.address() as net.AddressInfo;
 
     const bridge: ChildProcess = fork(bridgeBundlePath, [], { silent: true });
     const events: unknown[] = [];
     bridge.on('message', (m) => events.push(m));
 
     bridge.send({ kind: 'connect', host: '127.0.0.1', port });
-    await new Promise((r) => {
-      setTimeout(r, 300);
+    await new Promise((resolve) => {
+      setTimeout(resolve, 300);
     });
     expect(events.map((e: { kind: string } | unknown) => (e as { kind: string }).kind)).toContain(
       'state',
@@ -35,14 +37,16 @@ describe.skipIf(!bundleExists)('bridge IPC smoke', () => {
 
     bridge.send({ kind: 'disconnect' });
     // Wait a beat for the bridge to disconnect cleanly before killing the process.
-    await new Promise((r) => {
-      setTimeout(r, 50);
+    await new Promise((resolve) => {
+      setTimeout(resolve, 50);
     });
     bridge.kill();
-    await new Promise<void>((res) => {
-      bridge.on('exit', () => res());
+    await new Promise<void>((resolve) => {
+      bridge.on('exit', () => resolve());
     });
     for (const s of sockets) s.destroy();
-    await new Promise<void>((res) => server.close(() => res()));
+    await new Promise<void>((resolve) => {
+      server.close(() => resolve());
+    });
   });
 });
