@@ -8,10 +8,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
 } from 'platform-bible-react';
 import type { SneezeRecord } from 'paranext-extension-sneeze-board';
 import { useSneezeBoardState } from './use-sneeze-board-state';
@@ -37,11 +33,7 @@ function SneezeBoardWebView() {
   /** When set, the Sneeze button becomes "Save edit" and operates on this sneeze. */
   const [editingSneeze, setEditingSneeze] = useState<SneezeRecord | undefined>(undefined);
 
-  /** Action-menu state: cursor-anchored Edit / Remove dropdown for the current sneeze. */
-  const [actionTarget, setActionTarget] = useState<SneezeRecord | undefined>(undefined);
-  const [actionPos, setActionPos] = useState<{ x: number; y: number } | undefined>(undefined);
-
-  /** Remove-confirmation dialog. */
+  /** Remove-confirmation dialog target. */
   const [removeTarget, setRemoveTarget] = useState<SneezeRecord | undefined>(undefined);
 
   // Track the WebView's own width — the platform panel size, not window viewport.
@@ -97,6 +89,11 @@ function SneezeBoardWebView() {
     setComment('');
   };
 
+  const startEdit = (sneeze: SneezeRecord) => {
+    setEditingSneeze(sneeze);
+    setComment(sneeze.comment ?? '');
+  };
+
   // ── Compact mode: Stats replaces the entire WebView contents ────────────
   if (isCompact && showStats && state.database) {
     return (
@@ -122,12 +119,9 @@ function SneezeBoardWebView() {
           database={state.database}
           fontSize={14}
           backgroundColor="#FFF"
-          onSneezeAction={(s, _index, event) => {
-            // Only own sneezes are actionable (matches C# behavior).
-            if (s.userId !== state.currentUserId) return;
-            setActionTarget(s);
-            setActionPos({ x: event.clientX, y: event.clientY });
-          }}
+          currentUserId={state.currentUserId}
+          onEditSneeze={startEdit}
+          onRemoveSneeze={(s) => setRemoveTarget(s)}
         />
       ) : (
         <div className="sneeze-board__grid-placeholder">No database loaded.</div>
@@ -166,52 +160,6 @@ function SneezeBoardWebView() {
       {/* Dialog stats only at non-compact sizes — compact view replaces inline above. */}
       {state.database && !isCompact && (
         <StatsDialog open={showStats} onOpenChange={setShowStats} database={state.database} />
-      )}
-
-      {/* Cursor-anchored context menu for sneeze Edit / Remove.
-          A 1×1 invisible trigger element is rendered at the cursor position
-          and used as the menu's anchor; closing clears the target. */}
-      {actionTarget && actionPos && (
-        <DropdownMenu
-          open
-          onOpenChange={(o) => {
-            if (!o) setActionTarget(undefined);
-          }}
-        >
-          <DropdownMenuTrigger asChild>
-            <div
-              aria-hidden
-              style={{
-                position: 'fixed',
-                left: actionPos.x,
-                top: actionPos.y,
-                width: 1,
-                height: 1,
-                pointerEvents: 'none',
-              }}
-            />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" sideOffset={2}>
-            <DropdownMenuItem
-              onSelect={() => {
-                setEditingSneeze(actionTarget);
-                setComment(actionTarget.comment ?? '');
-                setActionTarget(undefined);
-              }}
-            >
-              Edit sneeze
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              variant="destructive"
-              onSelect={() => {
-                setRemoveTarget(actionTarget);
-                setActionTarget(undefined);
-              }}
-            >
-              Remove sneeze
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       )}
 
       {/* Remove-confirmation dialog. */}

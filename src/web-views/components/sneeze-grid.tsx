@@ -1,9 +1,12 @@
-import { useMemo, useRef, useEffect, useState, type MouseEvent as ReactMouseEvent } from 'react';
+import { useMemo, useRef, useEffect, useState } from 'react';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from 'platform-bible-react';
 import type { SneezeRecord, SneezeDatabase } from 'paranext-extension-sneeze-board';
 import { normalizeColor } from '../../util/color';
-
-// Re-export the React MouseEvent so callers don't have to import it separately.
-export type { ReactMouseEvent };
 
 const CELL_PADDING_X = 10;
 /** Treat the scroll position as "at the right edge" if within this many pixels. */
@@ -13,16 +16,20 @@ export function SneezeGrid({
   database,
   fontSize,
   backgroundColor,
-  onSneezeAction,
+  currentUserId,
+  onEditSneeze,
+  onRemoveSneeze,
 }: {
   database: SneezeDatabase;
   fontSize: number;
   backgroundColor: string;
   /**
-   * Called on right-click of a cell. The MouseEvent is forwarded so callers can position a context
-   * menu at the cursor (e.clientX / e.clientY).
+   * UserId whose sneezes are editable. Cells for this user are wrapped in a ContextMenu
+   * (right-click → Edit / Remove); other cells are plain spans.
    */
-  onSneezeAction: (sneeze: SneezeRecord, sneezeIndex: number, event: ReactMouseEvent) => void;
+  currentUserId?: string;
+  onEditSneeze: (sneeze: SneezeRecord) => void;
+  onRemoveSneeze: (sneeze: SneezeRecord) => void;
 }) {
   const userColor = useMemo(() => {
     const m = new Map<string, string>();
@@ -55,12 +62,8 @@ export function SneezeGrid({
   const totalWidth = totalColumns * cellWidth;
 
   // Stick the scroll to the right edge so the latest sneezes are always visible.
-  // We track whether the user is currently parked at the right edge; if so, any
-  // resize / new-column growth re-pins the scroll to the new right edge.
-  // `stickRight` starts true (initial scroll-to-end on mount).
   const stickRightRef = useRef(true);
 
-  // Reset stick whenever the user manually scrolls left/right.
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return undefined;
@@ -72,7 +75,6 @@ export function SneezeGrid({
     return () => el.removeEventListener('scroll', onScroll);
   }, []);
 
-  // After every render (sneezes/columns may have grown), if we're sticky, jump to the right.
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -92,28 +94,44 @@ export function SneezeGrid({
           const row = i % rowsPerColumn;
           const sneezeNum = database.countdownStart - i;
           const color = userColor.get(s.userId) ?? '#000';
+          const title = (() => {
+            const name = userName.get(s.userId) ?? 'Unknown';
+            const localDate = new Date(s.date).toLocaleString();
+            return `Sneeze ${sneezeNum}\n${name}\n${localDate}${s.comment ? `\n\n${s.comment}` : ''}`;
+          })();
+          const style = {
+            left: col * cellWidth,
+            top: row * lineHeight,
+            color,
+            fontSize: `${fontSize}px`,
+            lineHeight: `${lineHeight}px`,
+          };
+          const className = `sneeze-grid__cell${s.comment ? ' has-comment' : ''}`;
+          // eslint-disable-next-line react/no-array-index-key
+          const key = `${s.userId}-${s.date}-${i}`;
+
+          const cell = (
+            <span className={className} style={style} title={title}>
+              {sneezeNum}
+            </span>
+          );
+
+          // Only own sneezes get the Edit/Remove context menu.
+          if (currentUserId && s.userId === currentUserId) {
+            return (
+              <ContextMenu key={key}>
+                <ContextMenuTrigger asChild>{cell}</ContextMenuTrigger>
+                <ContextMenuContent>
+                  <ContextMenuItem onSelect={() => onEditSneeze(s)}>Edit sneeze</ContextMenuItem>
+                  <ContextMenuItem variant="destructive" onSelect={() => onRemoveSneeze(s)}>
+                    Remove sneeze
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
+            );
+          }
           return (
-            <span
-              // eslint-disable-next-line react/no-array-index-key
-              key={`${s.userId}-${s.date}-${i}`}
-              className={`sneeze-grid__cell${s.comment ? ' has-comment' : ''}`}
-              style={{
-                left: col * cellWidth,
-                top: row * lineHeight,
-                color,
-                fontSize: `${fontSize}px`,
-                lineHeight: `${lineHeight}px`,
-              }}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                onSneezeAction(s, i, e);
-              }}
-              title={(() => {
-                const name = userName.get(s.userId) ?? 'Unknown';
-                const localDate = new Date(s.date).toLocaleString();
-                return `Sneeze ${sneezeNum}\n${name}\n${localDate}${s.comment ? `\n\n${s.comment}` : ''}`;
-              })()}
-            >
+            <span key={key} className={className} style={style} title={title}>
               {sneezeNum}
             </span>
           );

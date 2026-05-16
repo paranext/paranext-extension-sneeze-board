@@ -3,6 +3,17 @@
   font-family: system-ui, sans-serif;
 }
 
+// Vaul (the underlying library for Drawer) wraps the Drawer's children in a
+// flex column with `flex-1` but only `min-w-0` (no `min-h-0`). In CSS flex,
+// the implicit `min-height: auto` prevents the child from shrinking below
+// its content size — so an inner `flex-1 overflow-auto` div has nothing to
+// shrink into, and the whole thing overflows the viewport without scrolling.
+// Forcing `min-height: 0` on direct children of `[data-slot="drawer-content"]`
+// unblocks the shrink → our middle div can scroll.
+[data-slot='drawer-content'] > div {
+  min-height: 0;
+}
+
 // Inline compact-mode stats — fills the WebView when it is too small for a Dialog.
 // We don't add our own scroll container here; the WebView panel that hosts us
 // already scrolls. Adding overflow: auto here would produce a nested scrollbar.

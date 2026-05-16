@@ -302,7 +302,7 @@ export function StatsDialog({
         </DrawerHeader>
         <div
           style={{
-            flex: '1 1 auto',
+            flex: '1 1 0',
             minHeight: 0,
             overflowY: 'auto',
             padding: '0 8px 8px',
