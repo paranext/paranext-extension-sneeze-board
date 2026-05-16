@@ -16,7 +16,7 @@ import type {
 
 import sneezeBoardWebViewContent from './web-views/sneeze-board.web-view?inline';
 import sneezeBoardStyles from './web-views/sneeze-board.web-view.scss?inline';
-import { computeStreakSituation } from './util/stats';
+import { applyStreakCelebration } from './util/streak-celebration';
 
 // Bridge IPC types are duplicated here (importing across the host/bridge boundary is
 // awkward; the types are tiny). Keep in sync with src/bridge/ipc-types.ts.
@@ -104,55 +104,6 @@ function scheduleReconnect() {
       sendToBridge({ kind: 'connect', host: lastConnectIp });
     }
   }, RECONNECT_DELAY_MS);
-}
-
-/**
- * Apply the C# `GetLongestStreak` celebration logic to a sneeze that's about to be sent. Returns
- * the (possibly augmented) comment to use and an optional notification message to display.
- *
- * - CurrentStreak == 3, not leader, sneezesToVictory > 1 → "you should chase X"
- * - SneezesToVictory == 1 → "one away from tying"
- * - SneezesToVictory == 0 → record broken / extended
- *
- *   - If a different user previously held the record: append a "X beat Y's sneeze streak record." line
- *       to the comment.
- *   - If this user already held it: append "The legend continues!".
- */
-function applyStreakCelebration(
-  userId: string,
-  userComment: string,
-): { comment: string; notification?: string } {
-  const db = state.database;
-  if (!db) return { comment: userComment };
-  const user = db.users.find((u) => u.userId === userId);
-  if (!user) return { comment: userComment };
-
-  const situation = computeStreakSituation(db, userId);
-  const { currentStreak, longestStreak, streakWinnerId, sneezesToVictory } = situation;
-  const winner = streakWinnerId ? db.users.find((u) => u.userId === streakWinnerId) : undefined;
-  const winnerName = winner?.name ?? 'someone';
-
-  let notification: string | undefined;
-  let suffix = '';
-
-  if (currentStreak === 3 && userId !== streakWinnerId && sneezesToVictory > 1) {
-    notification = `The longest sneeze streak is ${winnerName}'s ${longestStreak}. You need to sneeze ${sneezesToVictory} more times to beat it!`;
-  } else if (sneezesToVictory === 1) {
-    notification = `Way to go! You are only ONE sneeze away from breaking ${winnerName}'s sneeze streak record.`;
-  } else if (sneezesToVictory === 0) {
-    if (userId !== streakWinnerId) {
-      notification = `🎉 Congratulations ${user.name}! You set a new sneeze streak record! Your ${currentStreak}-sneeze streak beat ${winnerName}'s ${longestStreak}-sneeze streak.`;
-      suffix = `${user.name} beat ${winnerName}'s sneeze streak record.`;
-    } else {
-      notification = `🎉 Congratulations ${user.name}! You have become a sneezing legend. You have increased your lead and set a new sneeze streak record!`;
-      suffix = `The legend continues!`;
-    }
-  }
-
-  // Combine the user's typed comment with the auto-appended suffix.
-  let comment = userComment;
-  if (suffix) comment = comment ? `${comment}\n${suffix}` : suffix;
-  return { comment, notification };
 }
 
 function sendSneezeNotification(record: SneezeRecord) {
@@ -358,9 +309,12 @@ export async function activate(context: ExecutionActivationContext) {
     papi.commands.registerCommand(
       'sneezeBoard.sneeze',
       async (userId: string, comment?: string) => {
+        const user = state.database?.users.find((u) => u.userId === userId);
         const { comment: finalComment, notification } = applyStreakCelebration(
+          state.database,
           userId,
           comment ?? '',
+          user?.name ?? 'You',
         );
         const record = {
           userId,
