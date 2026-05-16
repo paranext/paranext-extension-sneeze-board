@@ -38,7 +38,8 @@
   },
   "dependencies": {
     "@sillsdev/scripture": "^2.0.5",
-    "platform-bible-utils": "file:../paranext-core/lib/platform-bible-utils"
+    "platform-bible-utils": "file:../paranext-core/lib/platform-bible-utils",
+    "recharts": "^2.15.4"
   },
   "devDependencies": {
     "@dreamsicle.io/stylelint-config-tailwindcss": "^1.2.2",

@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { findUserStats, findLongestStreaks, estimateApocalypseDate } from './stats';
+import {
+  findUserStats,
+  findLongestStreaks,
+  estimateApocalypseDate,
+  findAllStreaks,
+  findExtendedUserStats,
+  UNKNOWN_USER_ID,
+} from './stats';
 import type { SneezeDatabase } from '../bridge/xml/sneeze-database';
 
 const db: SneezeDatabase = {
@@ -61,6 +68,57 @@ describe('findLongestStreaks', () => {
     });
     expect(streaks.get('u1')).toBe(1);
     expect(streaks.get('u2')).toBe(1);
+  });
+});
+
+describe('findAllStreaks', () => {
+  it('returns every contiguous streak, sorted by length desc, skipping Unknown user', () => {
+    const streaks = findAllStreaks({
+      ...db,
+      sneezes: [
+        { userId: 'u1', date: 'd1' },
+        { userId: 'u1', date: 'd2' },
+        { userId: 'u2', date: 'd3' },
+        { userId: UNKNOWN_USER_ID, date: 'd4' },
+        { userId: UNKNOWN_USER_ID, date: 'd5' },
+        { userId: 'u1', date: 'd6' },
+        { userId: 'u1', date: 'd7' },
+        { userId: 'u1', date: 'd8' },
+      ],
+    });
+    expect(streaks).toEqual([
+      { userId: 'u1', length: 3 },
+      { userId: 'u1', length: 2 },
+      { userId: 'u2', length: 1 },
+    ]);
+  });
+});
+
+describe('findExtendedUserStats', () => {
+  it('computes total/percentage/participationDays/avgDaysPerSneeze and excludes Unknown from %', () => {
+    const stats = findExtendedUserStats({
+      version: 1,
+      countdownStart: 100,
+      users: [],
+      sneezes: [
+        // 4 sneezes by u1 spanning 4 days
+        { userId: 'u1', date: '2024-01-01T00:00:00Z' },
+        { userId: 'u1', date: '2024-01-02T00:00:00Z' },
+        { userId: 'u1', date: '2024-01-03T00:00:00Z' },
+        { userId: 'u1', date: '2024-01-04T00:00:00Z' },
+        // 1 sneeze by u2 on day 5
+        { userId: 'u2', date: '2024-01-05T00:00:00Z' },
+        // Unknown user sneezes don't count toward the percentage denominator
+        { userId: UNKNOWN_USER_ID, date: '2024-01-06T00:00:00Z' },
+      ],
+    });
+    const u1 = stats.get('u1')!;
+    expect(u1.totalSneezes).toBe(4);
+    expect(u1.sneezePercentage).toBeCloseTo(80, 2); // 4 of 5 known
+    expect(u1.participationDays).toBeCloseTo(3, 2); // Jan 1 → Jan 4 = 3 days
+    expect(u1.avgDaysPerSneeze).toBeCloseTo(0.75, 2);
+    const unknown = stats.get(UNKNOWN_USER_ID)!;
+    expect(unknown.sneezePercentage).toBe(0); // explicitly zeroed for Unknown
   });
 });
 

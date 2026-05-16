@@ -36,6 +36,19 @@
   font-style: italic;
 }
 
+// Apocalypse line and Stats button on the same row, Stats right-aligned.
+.sneeze-board__apocalypse-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.sneeze-board__apocalypse-text {
+  flex: 1;
+  min-width: 0;
+}
+
 .sneeze-board__swatch {
   display: inline-block;
   width: 18px;
@@ -89,21 +102,4 @@
 
 .sneeze-grid__cell.has-comment {
   outline: 1px solid goldenrod;
-}
-
-.sneeze-board__stats-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sneeze-board__stats {
-  background: white;
-  padding: 24px;
-  min-width: 300px;
-  max-height: 80vh;
-  overflow: auto;
 }

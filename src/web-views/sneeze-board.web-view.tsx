@@ -5,7 +5,8 @@ import { useSneezeBoardState } from './use-sneeze-board-state';
 import { ConnectionBar } from './components/connection-bar';
 import { UserBar } from './components/user-bar';
 import { SneezeGrid } from './components/sneeze-grid';
-import { estimateApocalypseDate, findLongestStreaks, findUserStats } from '../util/stats';
+import { StatsDialog } from './components/stats-dialog';
+import { estimateApocalypseDate } from '../util/stats';
 
 function SneezeBoardWebView() {
   const state = useSneezeBoardState();
@@ -20,12 +21,12 @@ function SneezeBoardWebView() {
 
   const isConnected = state.connection === 'open';
 
-  const apocalypseLine = (() => {
+  const apocalypseText = (() => {
     if (!state.database) return null;
     const result = estimateApocalypseDate(state.database, 'allTime');
-    const text =
-      result === 'noSneezesInRange' ? 'No sneezes in range' : (result as Date).toLocaleString();
-    return <p>Estimated final sneeze date: {text}</p>;
+    return result === 'noSneezesInRange'
+      ? 'No sneezes in range'
+      : (result as Date).toLocaleString();
   })();
 
   const winBanner =
@@ -78,52 +79,20 @@ function SneezeBoardWebView() {
           }
         />
       )}
-      {apocalypseLine}
       {winBanner}
-      <Button variant="ghost" onClick={() => setShowStats(true)} disabled={!isConnected}>
-        Stats
-      </Button>
-      {showStats && state.database && (
-        <div
-          className="sneeze-board__stats-overlay"
-          onClick={() => setShowStats(false)}
-          role="presentation"
-        >
-          <div
-            className="sneeze-board__stats"
-            onClick={(e) => e.stopPropagation()}
-            role="presentation"
-          >
-            <h3>Stats</h3>
-            <h4>Longest streaks</h4>
-            <ul>
-              {[...findLongestStreaks(state.database).entries()]
-                .sort((a, b) => b[1] - a[1])
-                .map(([userId, streak]) => {
-                  const user = state.database!.users.find((u) => u.userId === userId);
-                  return (
-                    <li key={userId}>
-                      {user?.name ?? userId}: {streak}
-                    </li>
-                  );
-                })}
-            </ul>
-            <h4>Sneeze counts</h4>
-            <ul>
-              {[...findUserStats(state.database).entries()]
-                .sort((a, b) => b[1].totalSneezes - a[1].totalSneezes)
-                .map(([userId, s]) => {
-                  const user = state.database!.users.find((u) => u.userId === userId);
-                  return (
-                    <li key={userId}>
-                      {user?.name ?? userId}: {s.totalSneezes}
-                    </li>
-                  );
-                })}
-            </ul>
-            <Button onClick={() => setShowStats(false)}>Close</Button>
-          </div>
+      {state.database && (
+        <div className="sneeze-board__apocalypse-row">
+          <span className="sneeze-board__apocalypse-text">
+            Estimated final sneeze date: <strong>{apocalypseText}</strong>
+          </span>
+          <Button onClick={() => setShowStats(true)} disabled={!isConnected}>
+            Stats
+          </Button>
         </div>
+      )}
+
+      {state.database && (
+        <StatsDialog open={showStats} onOpenChange={setShowStats} database={state.database} />
       )}
     </div>
   );

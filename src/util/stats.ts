@@ -6,6 +6,9 @@ export type UserStats = {
   lastSneezeDate: string;
 };
 
+/** ID of the built-in Nemo / "Unknown" user — excluded from most aggregate stats. */
+export const UNKNOWN_USER_ID = '944616bd-20a1-4659-87af-04563043ffde';
+
 export function findUserStats(db: SneezeDatabase): Map<string, UserStats> {
   const out = new Map<string, UserStats>();
   for (const sneeze of db.sneezes) {
@@ -24,7 +27,72 @@ export function findUserStats(db: SneezeDatabase): Map<string, UserStats> {
   return out;
 }
 
-const UNKNOWN_USER_ID = '944616bd-20a1-4659-87af-04563043ffde';
+/** A single contiguous run of sneezes by one user. */
+export type Streak = { userId: string; length: number };
+
+/**
+ * Returns every streak (contiguous run of sneezes by one user) in the database, sorted by length
+ * descending. Mirrors the C# `SneezeDatabase.FindAllStreaks` shape used by the Streak Hall of Fame
+ * visualization, but flattened.
+ *
+ * Streaks attributed to the Unknown user are skipped (matches the C# behavior of not crediting
+ * them).
+ */
+export function findAllStreaks(db: SneezeDatabase): Streak[] {
+  const out: Streak[] = [];
+  if (db.sneezes.length === 0) return out;
+  let currentUserId = db.sneezes[0].userId;
+  let currentLength = 0;
+  const flush = () => {
+    if (currentLength === 0) return;
+    if (currentUserId.toLowerCase() !== UNKNOWN_USER_ID) {
+      out.push({ userId: currentUserId, length: currentLength });
+    }
+  };
+  for (const sneeze of db.sneezes) {
+    if (sneeze.userId === currentUserId) {
+      currentLength += 1;
+    } else {
+      flush();
+      currentUserId = sneeze.userId;
+      currentLength = 1;
+    }
+  }
+  flush();
+  return out.sort((a, b) => b.length - a.length);
+}
+
+/** Per-user extended stats matching the C# StatsForm Random Stats table. */
+export type ExtendedUserStats = UserStats & {
+  /** Percentage of total non-Unknown sneezes attributable to this user. */
+  sneezePercentage: number;
+  /** Days between first and last sneeze (inclusive of both endpoints). */
+  participationDays: number;
+  /** Average days between sneezes during the user's participation. */
+  avgDaysPerSneeze: number;
+};
+
+export function findExtendedUserStats(db: SneezeDatabase): Map<string, ExtendedUserStats> {
+  const base = findUserStats(db);
+  // Total sneezes excluding the Unknown user (matches C# Random Stats denominator).
+  let totalKnownSneezes = 0;
+  for (const [userId, s] of base) {
+    if (userId.toLowerCase() !== UNKNOWN_USER_ID) totalKnownSneezes += s.totalSneezes;
+  }
+  const out = new Map<string, ExtendedUserStats>();
+  for (const [userId, s] of base) {
+    const firstMs = new Date(s.firstSneezeDate).getTime();
+    const lastMs = new Date(s.lastSneezeDate).getTime();
+    const participationDays = Math.max(0, (lastMs - firstMs) / (24 * 60 * 60 * 1000));
+    const avgDaysPerSneeze = s.totalSneezes > 0 ? participationDays / s.totalSneezes : 0;
+    const sneezePercentage =
+      totalKnownSneezes > 0 && userId.toLowerCase() !== UNKNOWN_USER_ID
+        ? (s.totalSneezes * 100) / totalKnownSneezes
+        : 0;
+    out.set(userId, { ...s, sneezePercentage, participationDays, avgDaysPerSneeze });
+  }
+  return out;
+}
 
 export function findLongestStreaks(db: SneezeDatabase): Map<string, number> {
   const out = new Map<string, number>();

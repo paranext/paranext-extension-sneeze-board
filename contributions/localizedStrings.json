@@ -1,12 +1,10 @@
 {
   "metadata": {
-    "%mainMenu_sneezeBoard%": { "notes": "Application main menu > Sneeze Board" },
-    "%sneezeBoardMenu_openSneezeBoard%": { "notes": "Sneeze Board menu > Open Sneeze Board" }
+    "%mainMenu_openSneezeBoard%": { "notes": "Application main menu > Open Sneeze Board" }
   },
   "localizedStrings": {
     "en": {
-      "%mainMenu_sneezeBoard%": "Sneeze Board",
-      "%sneezeBoardMenu_openSneezeBoard%": "Open Sneeze Board",
+      "%mainMenu_openSneezeBoard%": "Open Sneeze Board",
       "%settings_sneezeBoard_group_label%": "Sneeze Board",
       "%settings_sneezeBoard_group_description%": "Settings for the Sneeze Board extension",
       "%settings_sneezeBoard_serverIp_label%": "Server IP",
