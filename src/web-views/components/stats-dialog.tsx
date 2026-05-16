@@ -17,12 +17,12 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
   Table,
   TableBody,
   TableCell,
@@ -261,7 +261,11 @@ export function StatsView({ database }: { database: SneezeDatabase }) {
   );
 }
 
-/** Modal wrapper used at normal (>=compact) WebView sizes. */
+/**
+ * Stats panel used at normal (>=compact) WebView sizes. Drawer slides up from
+ * the bottom and handles vertical scroll natively, which is what the Dialog
+ * version was failing to do at typical WebView sizes.
+ */
 export function StatsDialog({
   open,
   onOpenChange,
@@ -272,20 +276,23 @@ export function StatsDialog({
   database: SneezeDatabase;
 }) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="tw:flex tw:flex-col tw:max-w-5xl tw:h-[min(90vh,800px)] tw:w-[min(95vw,1100px)] tw:p-0">
-        <DialogHeader className="tw:px-4 tw:pt-4">
-          <DialogTitle>Sneeze Board Stats</DialogTitle>
-        </DialogHeader>
-        <div className="tw:flex-1 tw:overflow-auto tw:px-2 tw:pb-2 tw:pt-2">
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent
+        className="tw:flex tw:flex-col"
+        style={{ maxHeight: '92vh' }}
+      >
+        <DrawerHeader className="tw:px-4 tw:py-2">
+          <DrawerTitle>Sneeze Board Stats</DrawerTitle>
+        </DrawerHeader>
+        <div className="tw:flex-1 tw:overflow-auto tw:px-2 tw:pb-2">
           <StatsView database={database} />
         </div>
-        <DialogFooter className="tw:px-4 tw:py-2 tw:border-t">
-          <DialogClose asChild>
+        <DrawerFooter className="tw:px-4 tw:py-2 tw:border-t">
+          <DrawerClose asChild>
             <Button>Close</Button>
-          </DialogClose>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }

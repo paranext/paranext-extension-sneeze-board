@@ -5,6 +5,7 @@ import {
   estimateApocalypseDate,
   findAllStreaks,
   findExtendedUserStats,
+  computeStreakSituation,
   UNKNOWN_USER_ID,
 } from './stats';
 import type { SneezeDatabase } from '../bridge/xml/sneeze-database';
@@ -68,6 +69,84 @@ describe('findLongestStreaks', () => {
     });
     expect(streaks.get('u1')).toBe(1);
     expect(streaks.get('u2')).toBe(1);
+  });
+});
+
+describe('computeStreakSituation', () => {
+  const baseDb = { version: 1, countdownStart: 100, users: [] };
+
+  it('reports currentStreak=1 when this user has no prior sneeze at the end of db', () => {
+    const s = computeStreakSituation(
+      {
+        ...baseDb,
+        sneezes: [
+          { userId: 'u1', date: 'd1' },
+          { userId: 'u2', date: 'd2' },
+        ],
+      },
+      'u1',
+    );
+    expect(s.currentStreak).toBe(1); // just the new sneeze
+    expect(s.longestStreak).toBe(1);
+  });
+
+  it('detects breaking another user\'s record', () => {
+    const s = computeStreakSituation(
+      {
+        ...baseDb,
+        sneezes: [
+          { userId: 'u1', date: 'd1' },
+          { userId: 'u1', date: 'd2' },
+          { userId: 'u1', date: 'd3' }, // u1's run: 3 (longest)
+          { userId: 'u2', date: 'd4' },
+          { userId: 'u2', date: 'd5' },
+          { userId: 'u2', date: 'd6' }, // u2 has 3 in a row at the end; new sneeze makes 4
+        ],
+      },
+      'u2',
+    );
+    expect(s.currentStreak).toBe(4);
+    expect(s.longestStreak).toBe(3);
+    expect(s.streakWinnerId).toBe('u1');
+    expect(s.sneezesToVictory).toBe(0); // 3 + 1 - 4
+  });
+
+  it('detects about-to-tie (sneezesToVictory === 1)', () => {
+    const s = computeStreakSituation(
+      {
+        ...baseDb,
+        sneezes: [
+          { userId: 'u1', date: 'd1' },
+          { userId: 'u1', date: 'd2' },
+          { userId: 'u1', date: 'd3' },
+          { userId: 'u2', date: 'd4' },
+          { userId: 'u2', date: 'd5' }, // u2 has 2 in a row at end; new sneeze makes 3
+        ],
+      },
+      'u2',
+    );
+    expect(s.currentStreak).toBe(3);
+    expect(s.longestStreak).toBe(3);
+    expect(s.sneezesToVictory).toBe(1);
+  });
+
+  it('detects legend-continues (same user extending own record)', () => {
+    const s = computeStreakSituation(
+      {
+        ...baseDb,
+        sneezes: [
+          { userId: 'u1', date: 'd1' },
+          { userId: 'u1', date: 'd2' },
+          { userId: 'u1', date: 'd3' },
+          { userId: 'u1', date: 'd4' }, // u1 owns the record at 4
+        ],
+      },
+      'u1',
+    );
+    expect(s.currentStreak).toBe(5);
+    expect(s.longestStreak).toBe(4);
+    expect(s.streakWinnerId).toBe('u1');
+    expect(s.sneezesToVictory).toBe(0); // 4 + 1 - 5
   });
 });
 

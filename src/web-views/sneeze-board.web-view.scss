@@ -4,10 +4,11 @@
 }
 
 // Inline compact-mode stats — fills the WebView when it is too small for a Dialog.
+// We don't add our own scroll container here; the WebView panel that hosts us
+// already scrolls. Adding overflow: auto here would produce a nested scrollbar.
 .sneeze-board--compact-stats {
   display: flex;
   flex-direction: column;
-  height: 100vh;
   padding: 4px;
 }
 
@@ -18,12 +19,15 @@
   gap: 6px;
   padding: 4px 6px;
   border-bottom: 1px solid var(--border, #ccc);
+  position: sticky;
+  top: 0;
+  background: var(--background, #fff);
+  z-index: 1;
 }
 
 .sneeze-board__compact-stats-body {
   flex: 1;
   min-height: 0;
-  overflow: auto;
 }
 
 .sneeze-board__connection-bar {
@@ -115,6 +119,13 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sneeze-board__add-user-error {
+  color: #dc2626;
+  font-size: 0.85em;
+  white-space: nowrap;
 }
 
 .sneeze-board__status {
