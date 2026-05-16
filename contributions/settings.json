@@ -23,6 +23,11 @@
       "sneezeBoard.fontSize": {
         "label": "%settings_sneezeBoard_fontSize_label%",
         "default": 12
+      },
+      "sneezeBoard.autoConnect": {
+        "label": "%settings_sneezeBoard_autoConnect_label%",
+        "description": "%settings_sneezeBoard_autoConnect_description%",
+        "default": true
       }
     }
   }

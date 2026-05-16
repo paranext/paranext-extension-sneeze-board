@@ -40,11 +40,23 @@ type BridgeEvent =
 const SNEEZE_BOARD_WEB_VIEW_TYPE = 'sneezeBoard.react';
 const SNEEZE_BOARD_STATE_CHANGE_EVENT = 'sneezeBoard.onDidChangeState';
 
+/** Must match SneezeBoardCommon/SneezeDatabase.cs `currentVersionNumber`. */
+const EXPECTED_DB_VERSION = 1;
+/** Delay before each auto-reconnect attempt. */
+const RECONNECT_DELAY_MS = 5_000;
+
 let bridge: ChildProcess | undefined;
-let state: SneezeBoardState = { connection: 'idle' };
+let state: SneezeBoardState = { connection: 'idle', autoConnect: true };
 let stateChangeEmitter:
   | ReturnType<typeof papi.network.createNetworkEventEmitter<SneezeBoardStateChange>>
   | undefined;
+
+/** IP we last attempted/successfully connected to — used by auto-reconnect. */
+let lastConnectIp: string | undefined;
+/** Pending reconnect timer (or undefined if none scheduled). */
+let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+/** When true, the next 'closed' should NOT trigger auto-reconnect (user-initiated disconnect). */
+let userInitiatedDisconnect = false;
 
 function emitState() {
   try {
@@ -67,19 +79,89 @@ function sendToBridge(cmd: BridgeCommand) {
   bridge.send(cmd);
 }
 
+function cancelReconnect() {
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = undefined;
+  }
+}
+
+function scheduleReconnect() {
+  if (reconnectTimer) return;
+  if (!state.autoConnect) return;
+  if (!lastConnectIp) return;
+  if (state.versionMismatch) return; // don't reconnect into a known-bad server version
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = undefined;
+    if (
+      state.autoConnect &&
+      lastConnectIp &&
+      state.connection !== 'open' &&
+      !state.versionMismatch
+    ) {
+      logger.info(`auto-reconnect attempt to ${lastConnectIp}`);
+      sendToBridge({ kind: 'connect', host: lastConnectIp });
+    }
+  }, RECONNECT_DELAY_MS);
+}
+
+function sendSneezeNotification(record: SneezeRecord) {
+  const db = state.database;
+  const user = db?.users.find((u) => u.userId === record.userId);
+  const name = user?.name ?? 'Someone';
+  const sneezeNum =
+    db && db.countdownStart > db.sneezes.length ? db.countdownStart - db.sneezes.length : undefined;
+  const numberSuffix = sneezeNum !== undefined ? ` (#${sneezeNum})` : '';
+  const message = record.comment
+    ? `${name} sneezed${numberSuffix}: ${record.comment}`
+    : `${name} sneezed${numberSuffix}!`;
+  papi.notifications
+    .send({ message, severity: 'info' })
+    .catch((e) => logger.warn(`notification send failed: ${(e as Error).message}`));
+}
+
 function handleBridgeEvent(ev: BridgeEvent) {
   switch (ev.kind) {
-    case 'state':
+    case 'state': {
       setState({ connection: ev.state, error: ev.error });
+      if (ev.state === 'open') {
+        cancelReconnect();
+        // Successful connect clears any stale version mismatch.
+        if (state.versionMismatch) setState({ versionMismatch: undefined });
+      } else if (ev.state === 'closed' || ev.state === 'error') {
+        if (userInitiatedDisconnect) {
+          userInitiatedDisconnect = false;
+        } else {
+          scheduleReconnect();
+        }
+      }
       break;
-    case 'database':
+    }
+    case 'database': {
+      if (ev.db.version !== EXPECTED_DB_VERSION) {
+        logger.warn(
+          `Server database version ${ev.db.version} != client expected ${EXPECTED_DB_VERSION}. Disconnecting.`,
+        );
+        setState({
+          versionMismatch: { serverVersion: ev.db.version, clientVersion: EXPECTED_DB_VERSION },
+          database: undefined,
+        });
+        // Disconnect to mirror C# SneezeClientListener.VerifyDatabase behavior.
+        userInitiatedDisconnect = true; // suppress auto-reconnect
+        sendToBridge({ kind: 'disconnect' });
+        cancelReconnect();
+        break;
+      }
       setState({ database: ev.db });
       break;
+    }
     case 'personSneezed': {
       const db = state.database;
       // Dedupe: optimistic local update may have already added this sneeze.
-      if (db && !db.sneezes.some((s) => s.date === ev.record.date))
+      if (db && !db.sneezes.some((s) => s.date === ev.record.date)) {
         setState({ database: { ...db, sneezes: [...db.sneezes, ev.record] } });
+        if (ev.record.userId !== state.currentUserId) sendSneezeNotification(ev.record);
+      }
       break;
     }
     case 'userUpdated': {
@@ -197,18 +279,30 @@ export async function activate(context: ExecutionActivationContext) {
         newValue >= 6 &&
         newValue <= 96,
     ),
+    papi.settings.registerValidator(
+      'sneezeBoard.autoConnect',
+      async (newValue) => typeof newValue === 'boolean',
+    ),
   ]);
 
   const unsubs = await Promise.all([
     papi.commands.registerCommand('sneezeBoard.connect', async (ip: string) => {
+      const trimmed = ip.trim();
       try {
-        await papi.settings.set('sneezeBoard.serverIp', ip);
+        await papi.settings.set('sneezeBoard.serverIp', trimmed);
       } catch (e) {
         logger.warn(`could not persist serverIp: ${(e as Error).message}`);
       }
-      sendToBridge({ kind: 'connect', host: ip });
+      lastConnectIp = trimmed;
+      cancelReconnect();
+      userInitiatedDisconnect = false;
+      // Clearing the version-mismatch flag here lets a user retry against an updated server.
+      if (state.versionMismatch) setState({ versionMismatch: undefined });
+      sendToBridge({ kind: 'connect', host: trimmed });
     }),
     papi.commands.registerCommand('sneezeBoard.disconnect', async () => {
+      userInitiatedDisconnect = true;
+      cancelReconnect();
       sendToBridge({ kind: 'disconnect' });
     }),
     papi.commands.registerCommand(
@@ -271,6 +365,26 @@ export async function activate(context: ExecutionActivationContext) {
       }
       setState({ currentUserId: userId });
     }),
+    papi.commands.registerCommand('sneezeBoard.setAutoConnect', async (value: boolean) => {
+      // Coerce in case a caller sent a string (e.g. CLI tests via JSON-RPC).
+      const coerced = value === true || (value as unknown) === 'true';
+      try {
+        await papi.settings.set('sneezeBoard.autoConnect', coerced);
+      } catch (e) {
+        logger.warn(`could not persist autoConnect: ${(e as Error).message}`);
+      }
+      setState({ autoConnect: coerced });
+      if (coerced) {
+        // Turned on: try to (re)connect if we have an IP and we're not already open.
+        if (state.connection !== 'open' && lastConnectIp && !state.versionMismatch) {
+          cancelReconnect();
+          sendToBridge({ kind: 'connect', host: lastConnectIp });
+        }
+      } else {
+        // Turned off: cancel any pending reconnect.
+        cancelReconnect();
+      }
+    }),
     papi.commands.registerCommand('sneezeBoard.openWebView', async () =>
       papi.webViews.openWebView(SNEEZE_BOARD_WEB_VIEW_TYPE),
     ),
@@ -290,9 +404,34 @@ export async function activate(context: ExecutionActivationContext) {
     logger.warn(`could not restore lastSneezerId: ${(e as Error).message}`);
   }
 
+  // Restore autoConnect from settings.
+  let autoConnect = true;
+  try {
+    const stored = await papi.settings.get('sneezeBoard.autoConnect');
+    if (typeof stored === 'boolean') autoConnect = stored;
+  } catch (e) {
+    logger.warn(`could not restore autoConnect: ${(e as Error).message}`);
+  }
+  setState({ autoConnect });
+
+  // Auto-connect at startup if enabled and an IP is configured.
+  try {
+    const storedIp = await papi.settings.get('sneezeBoard.serverIp');
+    if (typeof storedIp === 'string' && storedIp.trim()) {
+      lastConnectIp = storedIp.trim();
+      if (autoConnect) {
+        logger.info(`auto-connecting to ${lastConnectIp}`);
+        sendToBridge({ kind: 'connect', host: lastConnectIp });
+      }
+    }
+  } catch (e) {
+    logger.warn(`could not read serverIp on activate: ${(e as Error).message}`);
+  }
+
   for (const u of validators) context.registrations.add(u);
   for (const u of unsubs) context.registrations.add(u);
   context.registrations.add(() => {
+    cancelReconnect();
     bridge?.kill();
     return true;
   });
@@ -302,6 +441,7 @@ export async function activate(context: ExecutionActivationContext) {
 
 export async function deactivate() {
   logger.info('Sneeze Board is deactivating!');
+  cancelReconnect();
   bridge?.kill();
   bridge = undefined;
   // stateChangeEmitter is disposed via context.registrations; don't dispose twice here.

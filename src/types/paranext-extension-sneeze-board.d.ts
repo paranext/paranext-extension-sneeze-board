@@ -15,6 +15,8 @@ declare module 'paranext-extension-sneeze-board' {
     error?: string;
     database?: SneezeDatabase;
     currentUserId?: string;
+    autoConnect: boolean;
+    versionMismatch?: { serverVersion: number; clientVersion: number };
   };
 
   /** Event payload broadcast on every state change. */
@@ -28,6 +30,7 @@ declare module 'papi-shared-types' {
     'sneezeBoard.dateRange': string;
     'sneezeBoard.boardBackgroundColor': string;
     'sneezeBoard.fontSize': number;
+    'sneezeBoard.autoConnect': boolean;
   }
 
   interface CommandHandlers {
@@ -39,6 +42,7 @@ declare module 'papi-shared-types' {
     'sneezeBoard.updateSneeze': (date: string, comment: string) => Promise<void>;
     'sneezeBoard.removeSneeze': (date: string) => Promise<void>;
     'sneezeBoard.setCurrentUser': (userId: string) => Promise<void>;
+    'sneezeBoard.setAutoConnect': (value: boolean) => Promise<void>;
     'sneezeBoard.openWebView': () => Promise<string | undefined>;
     'sneezeBoard.getState': () => Promise<
       import('paranext-extension-sneeze-board').SneezeBoardState

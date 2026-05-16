@@ -3,6 +3,8 @@ import type { SneezeRecord, SneezeDatabase } from 'paranext-extension-sneeze-boa
 import { normalizeColor } from '../../util/color';
 
 const CELL_PADDING_X = 10;
+/** Treat the scroll position as "at the right edge" if within this many pixels. */
+const STICK_THRESHOLD_PX = 8;
 
 export function SneezeGrid({
   database,
@@ -18,6 +20,12 @@ export function SneezeGrid({
   const userColor = useMemo(() => {
     const m = new Map<string, string>();
     for (const u of database.users) m.set(u.userId, normalizeColor(u.color));
+    return m;
+  }, [database.users]);
+
+  const userName = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const u of database.users) m.set(u.userId, u.name);
     return m;
   }, [database.users]);
 
@@ -38,6 +46,33 @@ export function SneezeGrid({
     String(database.countdownStart).length * Math.ceil(fontSize * 0.62) + CELL_PADDING_X;
   const totalColumns = Math.ceil(database.sneezes.length / rowsPerColumn);
   const totalWidth = totalColumns * cellWidth;
+
+  // Stick the scroll to the right edge so the latest sneezes are always visible.
+  // We track whether the user is currently parked at the right edge; if so, any
+  // resize / new-column growth re-pins the scroll to the new right edge.
+  // `stickRight` starts true (initial scroll-to-end on mount).
+  const stickRightRef = useRef(true);
+
+  // Reset stick whenever the user manually scrolls left/right.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return undefined;
+    const onScroll = () => {
+      const atRight = el.scrollLeft + el.clientWidth >= el.scrollWidth - STICK_THRESHOLD_PX;
+      stickRightRef.current = atRight;
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // After every render (sneezes/columns may have grown), if we're sticky, jump to the right.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    if (stickRightRef.current) {
+      el.scrollLeft = Math.max(0, el.scrollWidth - el.clientWidth);
+    }
+  });
 
   return (
     <div ref={containerRef} className="sneeze-grid" style={{ background: backgroundColor }}>
@@ -66,7 +101,11 @@ export function SneezeGrid({
                 e.preventDefault();
                 onSneezeAction(s, i);
               }}
-              title={`Sneeze ${sneezeNum}\n${s.date}${s.comment ? `\n\n${s.comment}` : ''}`}
+              title={(() => {
+                const name = userName.get(s.userId) ?? 'Unknown';
+                const localDate = new Date(s.date).toLocaleString();
+                return `Sneeze ${sneezeNum}\n${name}\n${localDate}${s.comment ? `\n\n${s.comment}` : ''}`;
+              })()}
             >
               {sneezeNum}
             </span>

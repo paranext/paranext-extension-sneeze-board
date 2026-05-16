@@ -188,11 +188,11 @@ function stringPayload(s) {
         socket.write(frame(header, payload));
         console.log('-> DatabaseRequested (int32 0)');
       }
-      if (r.header.packetType === 'DatabaseObject') {
+      if (r.header.packetType === 'Database object') {
         const payloadLen = r.payload.readInt32LE(0);
         const xml = r.payload.subarray(4, 4 + payloadLen).toString('utf8');
         console.log(`  database xml (first 400 chars): ${xml.slice(0, 400)}`);
-        console.log('SUCCESS: DatabaseObject received');
+        console.log('SUCCESS: Database object received');
         socket.destroy();
         process.exit(0);
       }

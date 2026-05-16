@@ -10,7 +10,7 @@ const SNEEZE_BOARD_STATE_CHANGE_EVENT = 'sneezeBoard.onDidChangeState';
  * command, then listens to the `sneezeBoard.onDidChangeState` network event for updates.
  */
 export function useSneezeBoardState(): SneezeBoardState {
-  const [state, setState] = useState<SneezeBoardState>({ connection: 'idle' });
+  const [state, setState] = useState<SneezeBoardState>({ connection: 'idle', autoConnect: true });
 
   useEffect(() => {
     let cancelled = false;

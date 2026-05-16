@@ -18,6 +18,8 @@ function SneezeBoardWebView() {
     });
   }, []);
 
+  const isConnected = state.connection === 'open';
+
   const apocalypseLine = (() => {
     if (!state.database) return null;
     const result = estimateApocalypseDate(state.database, 'allTime');
@@ -33,21 +35,7 @@ function SneezeBoardWebView() {
 
   return (
     <div className="sneeze-board">
-      <ConnectionBar connection={state.connection} error={state.error} defaultIp={serverIp} />
-      {state.database && (
-        <UserBar
-          users={state.database.users}
-          currentUserId={state.currentUserId}
-          onSneeze={(userId, comment) =>
-            papi.commands.sendCommand('sneezeBoard.sneeze', userId, comment)
-          }
-        />
-      )}
-      {apocalypseLine}
-      {winBanner}
-      <Button variant="ghost" onClick={() => setShowStats(true)}>
-        Stats
-      </Button>
+      {/* Grid first — primary content sits at the top. */}
       {state.database ? (
         <SneezeGrid
           database={state.database}
@@ -71,8 +59,30 @@ function SneezeBoardWebView() {
           }}
         />
       ) : (
-        <p>No database loaded.</p>
+        <div className="sneeze-board__grid-placeholder">No database loaded.</div>
       )}
+
+      <ConnectionBar
+        connection={state.connection}
+        error={state.error}
+        defaultIp={serverIp}
+        autoConnect={state.autoConnect}
+        versionMismatch={state.versionMismatch}
+      />
+      {state.database && (
+        <UserBar
+          users={state.database.users}
+          currentUserId={state.currentUserId}
+          onSneeze={(userId, comment) =>
+            papi.commands.sendCommand('sneezeBoard.sneeze', userId, comment)
+          }
+        />
+      )}
+      {apocalypseLine}
+      {winBanner}
+      <Button variant="ghost" onClick={() => setShowStats(true)} disabled={!isConnected}>
+        Stats
+      </Button>
       {showStats && state.database && (
         <div
           className="sneeze-board__stats-overlay"

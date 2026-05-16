@@ -7,7 +7,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin-bottom: 8px;
+  margin: 8px 0;
 }
 
 .sneeze-board__connection-row,
@@ -16,6 +16,24 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+// Push the auto-connect switch to the right edge of the connection row.
+.sneeze-board__autoconnect-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.sneeze-board__grid-placeholder {
+  height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--border, #ccc);
+  color: #888;
+  font-style: italic;
 }
 
 .sneeze-board__swatch {
@@ -66,6 +84,7 @@
   position: absolute;
   font-family: monospace;
   padding: 0 2px;
+  cursor: default;
 }
 
 .sneeze-grid__cell.has-comment {

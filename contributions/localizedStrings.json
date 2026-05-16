@@ -14,7 +14,9 @@
       "%settings_sneezeBoard_lastSneezerId_label%": "Last sneezer ID",
       "%settings_sneezeBoard_dateRange_label%": "Apocalypse date range",
       "%settings_sneezeBoard_boardBackgroundColor_label%": "Board background color",
-      "%settings_sneezeBoard_fontSize_label%": "Sneeze board font size"
+      "%settings_sneezeBoard_fontSize_label%": "Sneeze board font size",
+      "%settings_sneezeBoard_autoConnect_label%": "Auto-connect to server",
+      "%settings_sneezeBoard_autoConnect_description%": "When enabled, automatically connect to the saved server IP on startup and reconnect if the connection drops."
     }
   }
 }
