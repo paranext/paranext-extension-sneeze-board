@@ -1,6 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import papi from '@papi/frontend';
-import { Button } from 'platform-bible-react';
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from 'platform-bible-react';
+import type { SneezeRecord } from 'paranext-extension-sneeze-board';
 import { useSneezeBoardState } from './use-sneeze-board-state';
 import { ConnectionBar } from './components/connection-bar';
 import { UserBar } from './components/user-bar';
@@ -8,14 +21,28 @@ import { SneezeGrid } from './components/sneeze-grid';
 import { StatsDialog, StatsView } from './components/stats-dialog';
 import { estimateApocalypseDate } from '../util/stats';
 
-/** WebView widths below this threshold render Stats inline (replacing the main UI)
- *  instead of opening a Dialog — modals don't fit usefully in tiny panels. */
+/**
+ * WebView widths below this threshold render Stats inline (replacing the main UI) instead of
+ * opening a Dialog — modals don't fit usefully in tiny panels.
+ */
 const COMPACT_BREAKPOINT_PX = 500;
 
 function SneezeBoardWebView() {
   const state = useSneezeBoardState();
   const [serverIp, setServerIp] = useState('');
   const [showStats, setShowStats] = useState(false);
+
+  /** Controlled comment value for the user bar — lifted here so edit-mode can prefill it. */
+  const [comment, setComment] = useState('');
+  /** When set, the Sneeze button becomes "Save edit" and operates on this sneeze. */
+  const [editingSneeze, setEditingSneeze] = useState<SneezeRecord | undefined>(undefined);
+
+  /** Action-menu state: cursor-anchored Edit / Remove dropdown for the current sneeze. */
+  const [actionTarget, setActionTarget] = useState<SneezeRecord | undefined>(undefined);
+  const [actionPos, setActionPos] = useState<{ x: number; y: number } | undefined>(undefined);
+
+  /** Remove-confirmation dialog. */
+  const [removeTarget, setRemoveTarget] = useState<SneezeRecord | undefined>(undefined);
 
   // Track the WebView's own width — the platform panel size, not window viewport.
   const rootRef = useRef<HTMLDivElement>(null);
@@ -53,6 +80,23 @@ function SneezeBoardWebView() {
       <p style={{ color: 'gold', fontWeight: 'bold' }}>We win!</p>
     ) : null;
 
+  /** Dispatch the Sneeze button click — either a new sneeze or saving an edit. */
+  const handleSneezeOrSave = (userId: string, nextComment: string) => {
+    if (editingSneeze) {
+      papi.commands.sendCommand('sneezeBoard.updateSneeze', editingSneeze.date, nextComment);
+      setEditingSneeze(undefined);
+      setComment('');
+    } else {
+      papi.commands.sendCommand('sneezeBoard.sneeze', userId, nextComment);
+      setComment('');
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingSneeze(undefined);
+    setComment('');
+  };
+
   // ── Compact mode: Stats replaces the entire WebView contents ────────────
   if (isCompact && showStats && state.database) {
     return (
@@ -78,21 +122,11 @@ function SneezeBoardWebView() {
           database={state.database}
           fontSize={14}
           backgroundColor="#FFF"
-          onSneezeAction={(s) => {
-            if (s.userId !== state.currentUserId) return; // own sneezes only
-            // eslint-disable-next-line no-alert
-            const action = window.prompt(`Sneeze options: [E]dit comment or [R]emove?`, 'E');
-            if (!action) return;
-            if (action.toUpperCase() === 'E') {
-              // eslint-disable-next-line no-alert
-              const newComment = window.prompt('New comment:', s.comment ?? '');
-              if (newComment !== null)
-                papi.commands.sendCommand('sneezeBoard.updateSneeze', s.date, newComment);
-            } else if (action.toUpperCase() === 'R') {
-              // eslint-disable-next-line no-alert
-              if (window.confirm('Remove this sneeze?'))
-                papi.commands.sendCommand('sneezeBoard.removeSneeze', s.date);
-            }
+          onSneezeAction={(s, _index, event) => {
+            // Only own sneezes are actionable (matches C# behavior).
+            if (s.userId !== state.currentUserId) return;
+            setActionTarget(s);
+            setActionPos({ x: event.clientX, y: event.clientY });
           }}
         />
       ) : (
@@ -110,9 +144,11 @@ function SneezeBoardWebView() {
         <UserBar
           users={state.database.users}
           currentUserId={state.currentUserId}
-          onSneeze={(userId, comment) =>
-            papi.commands.sendCommand('sneezeBoard.sneeze', userId, comment)
-          }
+          comment={comment}
+          setComment={setComment}
+          editingSneeze={editingSneeze}
+          onSneeze={handleSneezeOrSave}
+          onCancelEdit={cancelEdit}
         />
       )}
       {winBanner}
@@ -131,6 +167,82 @@ function SneezeBoardWebView() {
       {state.database && !isCompact && (
         <StatsDialog open={showStats} onOpenChange={setShowStats} database={state.database} />
       )}
+
+      {/* Cursor-anchored context menu for sneeze Edit / Remove.
+          A 1×1 invisible trigger element is rendered at the cursor position
+          and used as the menu's anchor; closing clears the target. */}
+      {actionTarget && actionPos && (
+        <DropdownMenu
+          open
+          onOpenChange={(o) => {
+            if (!o) setActionTarget(undefined);
+          }}
+        >
+          <DropdownMenuTrigger asChild>
+            <div
+              aria-hidden
+              style={{
+                position: 'fixed',
+                left: actionPos.x,
+                top: actionPos.y,
+                width: 1,
+                height: 1,
+                pointerEvents: 'none',
+              }}
+            />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" sideOffset={2}>
+            <DropdownMenuItem
+              onSelect={() => {
+                setEditingSneeze(actionTarget);
+                setComment(actionTarget.comment ?? '');
+                setActionTarget(undefined);
+              }}
+            >
+              Edit sneeze
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={() => {
+                setRemoveTarget(actionTarget);
+                setActionTarget(undefined);
+              }}
+            >
+              Remove sneeze
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+
+      {/* Remove-confirmation dialog. */}
+      <Dialog
+        open={!!removeTarget}
+        onOpenChange={(o) => {
+          if (!o) setRemoveTarget(undefined);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove sneeze?</DialogTitle>
+            <DialogDescription>This will permanently remove the sneeze.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setRemoveTarget(undefined)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (removeTarget)
+                  papi.commands.sendCommand('sneezeBoard.removeSneeze', removeTarget.date);
+                setRemoveTarget(undefined);
+              }}
+            >
+              Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

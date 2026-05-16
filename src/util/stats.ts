@@ -95,28 +95,25 @@ export function findExtendedUserStats(db: SneezeDatabase): Map<string, ExtendedU
 }
 
 /**
- * What a user-about-to-sneeze's streak situation looks like given the current
- * database. Mirrors the C# `SneezeBoardForm.GetLongestStreak` logic.
+ * What a user-about-to-sneeze's streak situation looks like given the current database. Mirrors the
+ * C# `SneezeBoardForm.GetLongestStreak` logic.
  */
 export type StreakSituation = {
   /** How many sneezes in a row the user will have after this new sneeze. */
   currentStreak: number;
   /** Best ever streak across all users (using the existing database, not counting the new sneeze). */
   longestStreak: number;
-  /** userId of the current record holder (may be the same user). */
+  /** UserId of the current record holder (may be the same user). */
   streakWinnerId: string;
-  /** longestStreak + 1 - currentStreak. 0 → this sneeze breaks the record. 1 → about to tie. */
+  /** LongestStreak + 1 - currentStreak. 0 → this sneeze breaks the record. 1 → about to tie. */
   sneezesToVictory: number;
 };
 
 /**
- * Compute the streak situation for `userId` about to sneeze "next" given the
- * current state of the database (NOT yet including the new sneeze).
+ * Compute the streak situation for `userId` about to sneeze "next" given the current state of the
+ * database (NOT yet including the new sneeze).
  */
-export function computeStreakSituation(
-  db: SneezeDatabase,
-  userId: string,
-): StreakSituation {
+export function computeStreakSituation(db: SneezeDatabase, userId: string): StreakSituation {
   // 1) Find the current longest streak across all users (Unknown excluded).
   const streaks = findLongestStreaks(db);
   let longestStreak = 0;

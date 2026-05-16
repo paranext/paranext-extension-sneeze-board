@@ -93,11 +93,14 @@ export function StatsView({ database }: { database: SneezeDatabase }) {
 
   // Contributions slice data (Unknown user excluded by randomStats filter).
   const contributions = useMemo(
-    () => randomStats.filter((r) => r.totalSneezes > 0).map((r) => ({
-      name: r.name,
-      userId: r.userId,
-      value: r.totalSneezes,
-    })),
+    () =>
+      randomStats
+        .filter((r) => r.totalSneezes > 0)
+        .map((r) => ({
+          name: r.name,
+          userId: r.userId,
+          value: r.totalSneezes,
+        })),
     [randomStats],
   );
 
@@ -142,7 +145,9 @@ export function StatsView({ database }: { database: SneezeDatabase }) {
           <CardTitle>Streak Hall of Fame</CardTitle>
         </CardHeader>
         <CardContent className="tw:p-3 tw:pt-0">
-          <div style={{ width: '100%', minHeight: 200, height: Math.max(200, hallOfFame.length * 22) }}>
+          <div
+            style={{ width: '100%', minHeight: 200, height: Math.max(200, hallOfFame.length * 22) }}
+          >
             <ResponsiveContainer>
               <BarChart
                 data={hallOfFame}
@@ -262,9 +267,9 @@ export function StatsView({ database }: { database: SneezeDatabase }) {
 }
 
 /**
- * Stats panel used at normal (>=compact) WebView sizes. Drawer slides up from
- * the bottom and handles vertical scroll natively, which is what the Dialog
- * version was failing to do at typical WebView sizes.
+ * Stats panel used at normal (>=compact) WebView sizes. Drawer slides up from the bottom and
+ * handles vertical scroll natively, which is what the Dialog version was failing to do at typical
+ * WebView sizes.
  */
 export function StatsDialog({
   open,
@@ -275,19 +280,39 @@ export function StatsDialog({
   onOpenChange: (open: boolean) => void;
   database: SneezeDatabase;
 }) {
+  // Drawer scroll pattern: a fully bounded outer height (so the flex chain
+  // has something definite to subtract from), and a scrollable middle div
+  // with `min-height: 0` (otherwise a flex child's implicit min-height equals
+  // its content size and overflow never triggers). DrawerContent's internal
+  // wrapper is `display:flex; flex-direction:column; flex:1`, so the children
+  // inherit a column layout.
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent
-        className="tw:flex tw:flex-col"
-        style={{ maxHeight: '92vh' }}
+        hideDrawerHandle
+        style={{
+          height: '90vh',
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
       >
-        <DrawerHeader className="tw:px-4 tw:py-2">
+        <DrawerHeader style={{ padding: '8px 16px', flex: '0 0 auto' }}>
           <DrawerTitle>Sneeze Board Stats</DrawerTitle>
         </DrawerHeader>
-        <div className="tw:flex-1 tw:overflow-auto tw:px-2 tw:pb-2">
+        <div
+          style={{
+            flex: '1 1 auto',
+            minHeight: 0,
+            overflowY: 'auto',
+            padding: '0 8px 8px',
+          }}
+        >
           <StatsView database={database} />
         </div>
-        <DrawerFooter className="tw:px-4 tw:py-2 tw:border-t">
+        <DrawerFooter
+          style={{ padding: '8px 16px', flex: '0 0 auto', borderTop: '1px solid var(--border)' }}
+        >
           <DrawerClose asChild>
             <Button>Close</Button>
           </DrawerClose>

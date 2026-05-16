@@ -107,16 +107,16 @@ function scheduleReconnect() {
 }
 
 /**
- * Apply the C# `GetLongestStreak` celebration logic to a sneeze that's about
- * to be sent. Returns the (possibly augmented) comment to use and an optional
- * notification message to display.
+ * Apply the C# `GetLongestStreak` celebration logic to a sneeze that's about to be sent. Returns
+ * the (possibly augmented) comment to use and an optional notification message to display.
  *
- * - currentStreak == 3, not leader, sneezesToVictory > 1 → "you should chase X"
- * - sneezesToVictory == 1                               → "one away from tying"
- * - sneezesToVictory == 0                               → record broken / extended
- *   * If a different user previously held the record: append a
- *     "X beat Y's sneeze streak record." line to the comment.
- *   * If this user already held it:                  append "The legend continues!".
+ * - CurrentStreak == 3, not leader, sneezesToVictory > 1 → "you should chase X"
+ * - SneezesToVictory == 1 → "one away from tying"
+ * - SneezesToVictory == 0 → record broken / extended
+ *
+ *   - If a different user previously held the record: append a "X beat Y's sneeze streak record." line
+ *       to the comment.
+ *   - If this user already held it: append "The legend continues!".
  */
 function applyStreakCelebration(
   userId: string,

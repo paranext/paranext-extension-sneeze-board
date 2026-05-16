@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from 'platform-bible-react';
-import type { UserInfo } from 'paranext-extension-sneeze-board';
+import type { SneezeRecord, UserInfo } from 'paranext-extension-sneeze-board';
 import { normalizeColor } from '../../util/color';
 
 const DEFAULT_NEW_COLOR = '#00FFEE';
@@ -17,20 +17,32 @@ const DEFAULT_NEW_COLOR = '#00FFEE';
 export function UserBar({
   users,
   currentUserId,
+  comment,
+  setComment,
+  editingSneeze,
   onSneeze,
+  onCancelEdit,
 }: {
   users: UserInfo[];
   currentUserId?: string;
+  /** Controlled comment string; lifted to parent so edit-mode can prefill it. */
+  comment: string;
+  setComment: (value: string) => void;
+  /** When set, the Sneeze button becomes "Save edit" and a Cancel button appears. */
+  editingSneeze?: SneezeRecord;
+  /**
+   * Called when the user clicks the Sneeze button. In normal mode this should dispatch a new
+   * sneeze; in edit mode it should save the edit.
+   */
   onSneeze: (userId: string, comment: string) => void;
+  /** Called when the user cancels an edit. */
+  onCancelEdit: () => void;
 }) {
-  const [comment, setComment] = useState('');
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState(DEFAULT_NEW_COLOR);
   const [showAddUser, setShowAddUser] = useState(false);
 
-  // Color-picker draft: native <input type="color"> fires onChange on every
-  // slider tick; we hold the draft locally and only commit on Apply, so the
-  // server isn't hammered with a packet per pixel.
+  // Color-picker draft: only commit on Apply.
   const [colorDraft, setColorDraft] = useState<string | undefined>(undefined);
 
   const currentUser = users.find((u) => u.userId === currentUserId);
@@ -39,13 +51,8 @@ export function UserBar({
   const isColorEdited =
     !!currentUser && !!colorDraft && colorDraft.toUpperCase() !== currentColor.toUpperCase();
 
-  // Reset color draft if the selected user changes (so we don't accidentally
-  // apply the previous user's draft to the new one).
-  useEffect(() => {
-    setColorDraft(undefined);
-  }, [currentUserId]);
+  useEffect(() => setColorDraft(undefined), [currentUserId]);
 
-  // Reset the new-user form when the panel is hidden.
   useEffect(() => {
     if (!showAddUser) {
       setNewName('');
@@ -53,7 +60,6 @@ export function UserBar({
     }
   }, [showAddUser]);
 
-  // Validation for Add User: non-empty name, no duplicate names or colors.
   const { addDisabled, addError } = useMemo(() => {
     const trimmedName = newName.trim();
     if (!trimmedName) return { addDisabled: true, addError: '' };
@@ -75,6 +81,8 @@ export function UserBar({
     return { addDisabled: false, addError: '' };
   }, [newName, newColor, users]);
 
+  const isEditing = !!editingSneeze;
+
   return (
     <div className="sneeze-board__user-bar">
       <Select
@@ -93,9 +101,6 @@ export function UserBar({
         </SelectContent>
       </Select>
 
-      {/* Color edit: a transparent <input type="color"> overlays the swatch.
-          Clicking the swatch or "Change color" opens the picker; selecting a
-          color stages it as a draft. The user must click Apply to commit. */}
       <label
         className="sneeze-board__color-swatch-label"
         title={
@@ -123,7 +128,6 @@ export function UserBar({
       {isColorEdited ? (
         <>
           <Button
-            variant="default"
             onClick={() => {
               if (!currentUser || !colorDraft) return;
               papi.commands.sendCommand('sneezeBoard.updateUser', currentUser.userId, colorDraft);
@@ -140,29 +144,37 @@ export function UserBar({
         <Button
           variant="secondary"
           disabled={!currentUser}
-          onClick={() =>
-            document.getElementById('sneezeBoard-changeColorInput')?.click()
-          }
+          onClick={() => document.getElementById('sneezeBoard-changeColorInput')?.click()}
         >
           Change color
         </Button>
       )}
 
-      <Input placeholder="Comment" value={comment} onChange={(e) => setComment(e.target.value)} />
+      <Input
+        placeholder={isEditing ? 'Edit comment' : 'Comment'}
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+      />
       <Button
         disabled={!currentUserId}
         onClick={() => {
           if (!currentUserId) return;
           onSneeze(currentUserId, comment);
-          setComment('');
         }}
       >
-        Sneeze
+        {isEditing ? 'Save edit' : 'Sneeze'}
       </Button>
-      <Button variant="secondary" onClick={() => setShowAddUser((s) => !s)}>
-        {showAddUser ? '× User' : '+ User'}
-      </Button>
-      {showAddUser && (
+      {isEditing && (
+        <Button variant="secondary" onClick={onCancelEdit}>
+          Cancel edit
+        </Button>
+      )}
+      {!isEditing && (
+        <Button variant="secondary" onClick={() => setShowAddUser((s) => !s)}>
+          {showAddUser ? '× User' : '+ User'}
+        </Button>
+      )}
+      {showAddUser && !isEditing && (
         <span className="sneeze-board__add-user-row">
           <Input
             placeholder="New name"

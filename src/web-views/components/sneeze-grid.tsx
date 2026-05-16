@@ -1,6 +1,9 @@
-import { useMemo, useRef, useEffect, useState } from 'react';
+import { useMemo, useRef, useEffect, useState, type MouseEvent as ReactMouseEvent } from 'react';
 import type { SneezeRecord, SneezeDatabase } from 'paranext-extension-sneeze-board';
 import { normalizeColor } from '../../util/color';
+
+// Re-export the React MouseEvent so callers don't have to import it separately.
+export type { ReactMouseEvent };
 
 const CELL_PADDING_X = 10;
 /** Treat the scroll position as "at the right edge" if within this many pixels. */
@@ -15,7 +18,11 @@ export function SneezeGrid({
   database: SneezeDatabase;
   fontSize: number;
   backgroundColor: string;
-  onSneezeAction: (sneeze: SneezeRecord, sneezeIndex: number) => void;
+  /**
+   * Called on right-click of a cell. The MouseEvent is forwarded so callers can position a context
+   * menu at the cursor (e.clientX / e.clientY).
+   */
+  onSneezeAction: (sneeze: SneezeRecord, sneezeIndex: number, event: ReactMouseEvent) => void;
 }) {
   const userColor = useMemo(() => {
     const m = new Map<string, string>();
@@ -99,7 +106,7 @@ export function SneezeGrid({
               }}
               onContextMenu={(e) => {
                 e.preventDefault();
-                onSneezeAction(s, i);
+                onSneezeAction(s, i, e);
               }}
               title={(() => {
                 const name = userName.get(s.userId) ?? 'Unknown';

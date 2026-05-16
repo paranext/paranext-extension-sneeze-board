@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react';
 import papi from '@papi/frontend';
-import { Badge, Button, Input, Label, Switch } from 'platform-bible-react';
+import {
+  Badge,
+  Button,
+  Input,
+  Label,
+  Switch,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from 'platform-bible-react';
 import type { ConnectionState, SneezeBoardState } from 'paranext-extension-sneeze-board';
 
 export function ConnectionBar({
@@ -49,17 +59,34 @@ export function ConnectionBar({
     ? `Server database version (${versionMismatch.serverVersion}) does not match client version (${versionMismatch.clientVersion}). Please update your client or restart the server with a saved database.`
     : error;
 
+  const ipInput = (
+    <Input
+      value={ip}
+      onChange={(e) => setIp(e.target.value)}
+      placeholder="Server IP (e.g. 127.0.0.1)"
+      disabled={ipFieldDisabled}
+    />
+  );
+
   return (
     <div className="sneeze-board__connection-bar">
       <div className="sneeze-board__connection-row">
-        <Input
-          value={ip}
-          onChange={(e) => setIp(e.target.value)}
-          placeholder="Server IP (e.g. 127.0.0.1)"
-          disabled={ipFieldDisabled}
-        />
+        <TooltipProvider delayDuration={250}>
+          <Tooltip>
+            {/* Wrap in a span so the trigger is hoverable even when the inner
+                <Input> is disabled (disabled elements don't dispatch pointer events). */}
+            <TooltipTrigger asChild>
+              <span className="sneeze-board__ip-trigger">{ipInput}</span>
+            </TooltipTrigger>
+            {ipFieldDisabled && (
+              <TooltipContent>Disconnect to change the server IP.</TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
         {connection === 'open' ? (
-          <Button onClick={disconnect}>Disconnect</Button>
+          <Button variant="secondary" onClick={disconnect}>
+            Disconnect
+          </Button>
         ) : (
           <Button onClick={connect} disabled={connection === 'connecting' || !ip.trim()}>
             Connect

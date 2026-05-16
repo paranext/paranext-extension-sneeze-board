@@ -90,7 +90,7 @@ describe('computeStreakSituation', () => {
     expect(s.longestStreak).toBe(1);
   });
 
-  it('detects breaking another user\'s record', () => {
+  it("detects breaking another user's record", () => {
     const s = computeStreakSituation(
       {
         ...baseDb,
