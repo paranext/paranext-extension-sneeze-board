@@ -7,7 +7,7 @@
         "label": "%mainMenu_openSneezeBoard%",
         "localizeNotes": "Application main menu > Open Sneeze Board",
         "group": "platform.projectResources",
-        "order": -50,
+        "order": 999,
         "command": "sneezeBoard.openWebView"
       }
     ]

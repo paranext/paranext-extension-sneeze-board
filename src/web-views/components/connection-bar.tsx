@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import papi from '@papi/frontend';
-import { Button, Input, Label, Switch } from 'platform-bible-react';
+import { Badge, Button, Input, Label, Switch } from 'platform-bible-react';
 import type { ConnectionState, SneezeBoardState } from 'paranext-extension-sneeze-board';
 
 export function ConnectionBar({
@@ -65,7 +65,12 @@ export function ConnectionBar({
             Connect
           </Button>
         )}
-        <span className={`sneeze-board__status sneeze-board__status--${connection}`}>{label}</span>
+        <Badge
+          variant="secondary"
+          className={`sneeze-board__status sneeze-board__status--${connection}`}
+        >
+          {label}
+        </Badge>
         <div className="sneeze-board__autoconnect-toggle">
           <Switch
             id="sneezeBoard-autoConnect"

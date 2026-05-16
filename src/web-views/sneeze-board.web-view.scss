@@ -3,6 +3,29 @@
   font-family: system-ui, sans-serif;
 }
 
+// Inline compact-mode stats — fills the WebView when it is too small for a Dialog.
+.sneeze-board--compact-stats {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 4px;
+}
+
+.sneeze-board__compact-stats-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border, #ccc);
+}
+
+.sneeze-board__compact-stats-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
 .sneeze-board__connection-bar {
   display: flex;
   flex-direction: column;
@@ -55,6 +78,43 @@
   height: 18px;
   border: 1px solid #888;
   border-radius: 3px;
+}
+
+// "Change color" pattern: the visible swatch is a <label> wrapping a
+// position:absolute hidden <input type="color">. Clicking either the swatch or
+// the secondary button opens the native color picker via input.click().
+.sneeze-board__color-swatch-label {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.sneeze-board__color-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: 0;
+  padding: 0;
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.sneeze-board__color-input--visible {
+  position: static;
+  width: 32px;
+  height: 24px;
+  opacity: 1;
+}
+
+.sneeze-board__add-user-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .sneeze-board__status {

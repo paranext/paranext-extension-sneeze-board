@@ -1,17 +1,36 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import papi from '@papi/frontend';
 import { Button } from 'platform-bible-react';
 import { useSneezeBoardState } from './use-sneeze-board-state';
 import { ConnectionBar } from './components/connection-bar';
 import { UserBar } from './components/user-bar';
 import { SneezeGrid } from './components/sneeze-grid';
-import { StatsDialog } from './components/stats-dialog';
+import { StatsDialog, StatsView } from './components/stats-dialog';
 import { estimateApocalypseDate } from '../util/stats';
+
+/** WebView widths below this threshold render Stats inline (replacing the main UI)
+ *  instead of opening a Dialog — modals don't fit usefully in tiny panels. */
+const COMPACT_BREAKPOINT_PX = 500;
 
 function SneezeBoardWebView() {
   const state = useSneezeBoardState();
   const [serverIp, setServerIp] = useState('');
   const [showStats, setShowStats] = useState(false);
+
+  // Track the WebView's own width — the platform panel size, not window viewport.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState<number>(() =>
+    typeof window !== 'undefined' ? window.innerWidth : 1024,
+  );
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return undefined;
+    const ro = new ResizeObserver(() => setWidth(el.clientWidth));
+    ro.observe(el);
+    setWidth(el.clientWidth);
+    return () => ro.disconnect();
+  }, []);
+  const isCompact = width > 0 && width < COMPACT_BREAKPOINT_PX;
 
   useEffect(() => {
     papi.settings.get('sneezeBoard.serverIp').then((ip) => {
@@ -34,8 +53,25 @@ function SneezeBoardWebView() {
       <p style={{ color: 'gold', fontWeight: 'bold' }}>We win!</p>
     ) : null;
 
+  // ── Compact mode: Stats replaces the entire WebView contents ────────────
+  if (isCompact && showStats && state.database) {
+    return (
+      <div ref={rootRef} className="sneeze-board sneeze-board--compact-stats">
+        <div className="sneeze-board__compact-stats-header">
+          <strong>Sneeze Board Stats</strong>
+          <Button size="sm" onClick={() => setShowStats(false)}>
+            Back
+          </Button>
+        </div>
+        <div className="sneeze-board__compact-stats-body">
+          <StatsView database={state.database} />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="sneeze-board">
+    <div ref={rootRef} className="sneeze-board">
       {/* Grid first — primary content sits at the top. */}
       {state.database ? (
         <SneezeGrid
@@ -91,7 +127,8 @@ function SneezeBoardWebView() {
         </div>
       )}
 
-      {state.database && (
+      {/* Dialog stats only at non-compact sizes — compact view replaces inline above. */}
+      {state.database && !isCompact && (
         <StatsDialog open={showStats} onOpenChange={setShowStats} database={state.database} />
       )}
     </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import papi from '@papi/frontend';
 import {
   Button,
@@ -25,9 +25,17 @@ export function UserBar({
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState('#00FFEE');
   const [showAddUser, setShowAddUser] = useState(false);
+  const changeColorInputRef = useRef<HTMLInputElement>(null);
 
   const currentUser = users.find((u) => u.userId === currentUserId);
   const colorSwatch = currentUser ? normalizeColor(currentUser.color) : '#888';
+
+  // Reset the new-user form whenever the panel is toggled off.
+  useEffect(() => {
+    if (!showAddUser) {
+      setNewName('');
+    }
+  }, [showAddUser]);
 
   return (
     <div className="sneeze-board__user-bar">
@@ -46,21 +54,43 @@ export function UserBar({
           ))}
         </SelectContent>
       </Select>
-      <span
-        className="sneeze-board__swatch"
-        style={{ background: colorSwatch }}
-        aria-label="current color"
-      />
+
+      {/* Color swatch doubles as the "change color" trigger — clicking it opens
+          the native color picker via a hidden <input type="color">. This avoids
+          window.prompt (blocked by the sandboxed WebView). */}
+      <label
+        className="sneeze-board__color-swatch-label"
+        title={currentUser ? `Change color for ${currentUser.name}` : 'Current color'}
+      >
+        <span
+          className="sneeze-board__swatch"
+          style={{ background: colorSwatch }}
+          aria-label="current color"
+        />
+        <input
+          ref={changeColorInputRef}
+          type="color"
+          className="sneeze-board__color-input"
+          disabled={!currentUser}
+          value={colorSwatch.startsWith('#') ? colorSwatch : '#000000'}
+          onChange={(e) => {
+            if (!currentUser) return;
+            papi.commands.sendCommand(
+              'sneezeBoard.updateUser',
+              currentUser.userId,
+              e.target.value,
+            );
+          }}
+        />
+      </label>
       <Button
-        onClick={() => {
-          if (!currentUser) return;
-          // eslint-disable-next-line no-alert
-          const next = window.prompt('New color (#RRGGBB):', colorSwatch);
-          if (next) papi.commands.sendCommand('sneezeBoard.updateUser', currentUser.userId, next);
-        }}
+        variant="secondary"
+        disabled={!currentUser}
+        onClick={() => changeColorInputRef.current?.click()}
       >
         Change color
       </Button>
+
       <Input placeholder="Comment" value={comment} onChange={(e) => setComment(e.target.value)} />
       <Button
         disabled={!currentUserId}
@@ -72,11 +102,11 @@ export function UserBar({
       >
         Sneeze
       </Button>
-      <Button variant="ghost" onClick={() => setShowAddUser((s) => !s)}>
+      <Button variant="secondary" onClick={() => setShowAddUser((s) => !s)}>
         + User
       </Button>
       {showAddUser && (
-        <span>
+        <span className="sneeze-board__add-user-row">
           <Input
             placeholder="New name"
             value={newName}
@@ -87,6 +117,7 @@ export function UserBar({
             value={newColor}
             onChange={(e) => setNewColor(e.target.value)}
             aria-label="new user color"
+            className="sneeze-board__color-input sneeze-board__color-input--visible"
           />
           <Button
             onClick={() => {
