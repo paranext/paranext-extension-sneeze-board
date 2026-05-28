@@ -102,19 +102,32 @@ export class NetworkCommsClient {
    * packets).
    */
   connect(host: string, port: number): Promise<void> {
+    // Tear down any leftover socket first so its in-flight events don't
+    // clobber the new connection's state (e.g. old socket 'close' arriving
+    // mid-handshake and flipping us to 'closed', or buffered 'data' chunks
+    // appended to our fresh rxBuffer).
+    this.teardownSocket();
+
     this.setState('connecting');
-    this.handshakeComplete = false;
     let settled = false;
 
     return new Promise((resolve, reject) => {
       const socket = net.createConnection({ host, port });
       this.socket = socket;
-      this.rxBuffer = Buffer.alloc(0);
 
-      // Receive bytes ASAP so we can observe the handshake reply.
-      socket.on('data', (chunk) => this.onData(chunk));
-      socket.on('close', () => this.setState('closed'));
+      // Closure-capture `socket` so events from any previously-orphaned socket
+      // (defensive belt-and-suspenders alongside teardownSocket) are no-ops.
+      socket.on('data', (chunk) => {
+        if (this.socket !== socket) return;
+        this.onData(chunk);
+      });
+      socket.on('close', () => {
+        if (this.socket !== socket) return;
+        this.socket = undefined;
+        this.setState('closed');
+      });
       socket.on('error', (err) => {
+        if (this.socket !== socket) return;
         this.setState('error', err.message);
         if (!settled) {
           settled = true;
@@ -124,6 +137,10 @@ export class NetworkCommsClient {
 
       // One-shot handler for the server's ConnectionSetup reply.
       const unsubSetup = this.onRaw(PT.ConnectionSetup, () => {
+        if (this.socket !== socket) {
+          unsubSetup();
+          return;
+        }
         if (this.handshakeComplete) return;
         this.handshakeComplete = true;
         unsubSetup();
@@ -135,7 +152,7 @@ export class NetworkCommsClient {
       });
 
       socket.once('connect', () => {
-        // Send our ConnectionSetup (ConnectionInfo payload).
+        if (this.socket !== socket) return;
         const infoBytes = encodeConnectionInfo({
           connectionType: NcConnectionType.TCP,
           networkIdentifier: shortGuid(),
@@ -155,14 +172,11 @@ export class NetworkCommsClient {
 
       // Overall handshake timeout (mirrors NetworkComms.Net's 10s default).
       setTimeout(() => {
+        if (this.socket !== socket) return;
         if (!settled) {
           settled = true;
           this.setState('error', 'handshake timeout');
-          try {
-            socket.destroy();
-          } catch {
-            /* noop */
-          }
+          this.teardownSocket();
           reject(new Error('handshake timeout'));
         }
       }, 10_000);
@@ -170,13 +184,9 @@ export class NetworkCommsClient {
   }
 
   disconnect(): void {
-    try {
-      this.socket?.end();
-    } catch {
-      /* noop */
-    }
-    this.socket = undefined;
-    this.handshakeComplete = false;
+    if (!this.socket) return;
+    this.teardownSocket();
+    this.setState('closed');
   }
 
   /** Send a string payload (UTF-8 length-prefixed). */
@@ -233,6 +243,29 @@ export class NetworkCommsClient {
         reject(e);
       }
     });
+  }
+
+  /**
+   * Forcefully tear down the current socket and reset connection-scoped state. Any data/close/error
+   * events on the old socket that fire AFTER this call are silently dropped, because the handlers
+   * close over `socket` and compare against `this.socket`.
+   */
+  private teardownSocket(): void {
+    const old = this.socket;
+    if (!old) return;
+    this.socket = undefined;
+    this.handshakeComplete = false;
+    this.rxBuffer = Buffer.alloc(0);
+    try {
+      old.removeAllListeners();
+    } catch {
+      /* noop */
+    }
+    try {
+      old.destroy();
+    } catch {
+      /* noop */
+    }
   }
 
   private onData(chunk: Buffer): void {

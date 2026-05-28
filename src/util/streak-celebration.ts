@@ -14,24 +14,20 @@ export type StreakCelebration = {
  * comment, returns the final comment (possibly with an auto-appended suffix) and the notification
  * text (if any) to display.
  *
- *  Behavior:
+ * Behavior:
  *
- *  - currentStreak === 3, user is NOT the leader, sneezesToVictory > 1
- *      → notification: "the longest streak is X's N — sneeze M more to beat it"
- *  - sneezesToVictory === 1 (this sneeze ties the record)
- *      → notification: "you tied X's record of N — one more to take the lead"
- *      → no comment suffix
- *  - sneezesToVictory === 0 (this sneeze sets a new record)
- *      → if the previous holder was a different user
- *          - notification: "🎉 you beat X's record"
- *          - comment suffix: "<user> beat <prev>'s sneeze streak record."
- *      → if the user already held the record (extending)
- *          - notification: "🎉 the legend continues"
- *          - comment suffix: "The legend continues!"
+ * - CurrentStreak === 3, user is NOT the leader, sneezesToVictory > 1 → notification: "the longest
+ *   streak is X's N — sneeze M more to beat it"
+ * - SneezesToVictory === 1 (this sneeze ties the record) → notification: "you tied X's record of N —
+ *   one more to take the lead" → no comment suffix
+ * - SneezesToVictory === 0 (this sneeze sets a new record) → if the previous holder was a different
+ *   user - notification: "🎉 you beat X's record" - comment suffix: "<user> beat <prev>'s sneeze
+ *   streak record." → if the user already held the record (extending) - notification: "🎉 the
+ *   legend continues" - comment suffix: "The legend continues!"
  *
- *  Guards: returns the input comment unchanged for empty databases and for the Unknown / Nemo user
- *  (matches C# `if (database.Sneezes.Count == 0 || CurrentUser.UserGuid == CommonInfo.UnknownUserId)
- *  return ""`).
+ * Guards: returns the input comment unchanged for empty databases and for the Unknown / Nemo user
+ * (matches C# `if (database.Sneezes.Count == 0 || CurrentUser.UserGuid == CommonInfo.UnknownUserId)
+ * return ""`).
  */
 export function applyStreakCelebration(
   db: SneezeDatabase | undefined,
@@ -42,8 +38,10 @@ export function applyStreakCelebration(
   if (!db || db.sneezes.length === 0) return { comment: userComment };
   if (userId.toLowerCase() === UNKNOWN_USER_ID) return { comment: userComment };
 
-  const { currentStreak, longestStreak, streakWinnerId, sneezesToVictory } =
-    computeStreakSituation(db, userId);
+  const { currentStreak, longestStreak, streakWinnerId, sneezesToVictory } = computeStreakSituation(
+    db,
+    userId,
+  );
   const winner = streakWinnerId ? db.users.find((u) => u.userId === streakWinnerId) : undefined;
   const winnerName = winner?.name ?? 'someone';
 

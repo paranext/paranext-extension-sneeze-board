@@ -100,7 +100,7 @@ describe('applyStreakCelebration', () => {
     expect(result.comment).toBe("Bob beat Alice's sneeze streak record.");
   });
 
-  it('preserves the user\'s typed comment when appending the break suffix', () => {
+  it("preserves the user's typed comment when appending the break suffix", () => {
     const result = applyStreakCelebration(
       db([
         { userId: A, date: 'd1' },

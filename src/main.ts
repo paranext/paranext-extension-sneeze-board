@@ -294,16 +294,25 @@ export async function activate(context: ExecutionActivationContext) {
       } catch (e) {
         logger.warn(`could not persist serverIp: ${(e as Error).message}`);
       }
-      lastConnectIp = trimmed;
       cancelReconnect();
       userInitiatedDisconnect = false;
-      // Clearing the version-mismatch flag here lets a user retry against an updated server.
-      if (state.versionMismatch) setState({ versionMismatch: undefined });
+      // Clear any data from a previous server so the UI doesn't briefly show
+      // stale sneezes while the new database is loading. The version-mismatch
+      // flag is also cleared so the user can retry against an updated server.
+      const ipChanged = lastConnectIp !== trimmed;
+      lastConnectIp = trimmed;
+      setState({
+        versionMismatch: undefined,
+        ...(ipChanged ? { database: undefined } : {}),
+      });
       sendToBridge({ kind: 'connect', host: trimmed });
     }),
     papi.commands.registerCommand('sneezeBoard.disconnect', async () => {
       userInitiatedDisconnect = true;
       cancelReconnect();
+      // Clear the database on explicit user disconnect so we don't keep
+      // showing stale data after the user walks away from a server.
+      setState({ database: undefined });
       sendToBridge({ kind: 'disconnect' });
     }),
     papi.commands.registerCommand(
