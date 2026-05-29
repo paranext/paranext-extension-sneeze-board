@@ -124,7 +124,13 @@ function sendSneezeNotification(record: SneezeRecord) {
 function handleBridgeEvent(ev: BridgeEvent) {
   switch (ev.kind) {
     case 'state': {
-      setState({ connection: ev.state, error: ev.error });
+      // Preserve a previous error message across auto-reconnect cycles so the
+      // user can still read it while a retry is in flight. Clear on success,
+      // overwrite on a fresh error, otherwise keep what we had.
+      const patch: Partial<SneezeBoardState> = { connection: ev.state };
+      if (ev.state === 'open') patch.error = undefined;
+      else if (ev.error !== undefined) patch.error = ev.error;
+      setState(patch);
       if (ev.state === 'open') {
         cancelReconnect();
         // Successful connect clears any stale version mismatch.

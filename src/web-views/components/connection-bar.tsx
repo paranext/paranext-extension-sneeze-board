@@ -11,6 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from 'platform-bible-react';
+import { Loader2 } from 'lucide-react';
 import type { ConnectionState, SneezeBoardState } from 'paranext-extension-sneeze-board';
 
 export function ConnectionBar({
@@ -51,10 +52,14 @@ export function ConnectionBar({
             : 'Idle';
 
   const ipFieldDisabled = connection === 'open' || connection === 'connecting';
+  const isConnecting = connection === 'connecting';
 
-  // Surface any non-success state with an explanation.
+  // Keep the error banner visible across the whole non-open lifecycle (including
+  // 'connecting' so the user can read the last failure while an auto-reconnect
+  // is in flight). It clears on successful connect ('open') and isn't shown
+  // in the idle state.
   const showError =
-    !!versionMismatch || connection === 'error' || (connection === 'closed' && !!error);
+    !!versionMismatch || (!!error && connection !== 'open' && connection !== 'idle');
   const errorMessage = versionMismatch
     ? `Server database version (${versionMismatch.serverVersion}) does not match client version (${versionMismatch.clientVersion}). Please update your client or restart the server with a saved database.`
     : error;
@@ -88,8 +93,11 @@ export function ConnectionBar({
             Disconnect
           </Button>
         ) : (
-          <Button onClick={connect} disabled={connection === 'connecting' || !ip.trim()}>
-            Connect
+          <Button onClick={connect} disabled={isConnecting || !ip.trim()}>
+            {isConnecting && (
+              <Loader2 className="tw:animate-spin tw:mr-1 tw:h-4 tw:w-4" aria-hidden />
+            )}
+            {isConnecting ? 'Connecting…' : 'Connect'}
           </Button>
         )}
         <Badge
