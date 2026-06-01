@@ -1,9 +1,0 @@
-{
-  "name": "paranext-extension-sneeze-board",
-  "version": "0.0.1",
-  "description": "Example Paranext extension to display a sneeze board",
-  "author": "Rolf Heij and Katherine Jensen",
-  "license": "MIT",
-  "main": "paranext-extension-sneeze-board.ts",
-  "activationEvents": []
-}

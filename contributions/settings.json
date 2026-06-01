@@ -1,0 +1,34 @@
+[
+  {
+    "label": "%settings_sneezeBoard_group_label%",
+    "description": "%settings_sneezeBoard_group_description%",
+    "properties": {
+      "sneezeBoard.serverIp": {
+        "label": "%settings_sneezeBoard_serverIp_label%",
+        "description": "%settings_sneezeBoard_serverIp_description%",
+        "default": ""
+      },
+      "sneezeBoard.lastSneezerId": {
+        "label": "%settings_sneezeBoard_lastSneezerId_label%",
+        "default": ""
+      },
+      "sneezeBoard.dateRange": {
+        "label": "%settings_sneezeBoard_dateRange_label%",
+        "default": "allTime"
+      },
+      "sneezeBoard.boardBackgroundColor": {
+        "label": "%settings_sneezeBoard_boardBackgroundColor_label%",
+        "default": "#FFFFFF"
+      },
+      "sneezeBoard.fontSize": {
+        "label": "%settings_sneezeBoard_fontSize_label%",
+        "default": 12
+      },
+      "sneezeBoard.autoConnect": {
+        "label": "%settings_sneezeBoard_autoConnect_label%",
+        "description": "%settings_sneezeBoard_autoConnect_description%",
+        "default": true
+      }
+    }
+  }
+]

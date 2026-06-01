@@ -1,3 +1,5 @@
+# #region shared with https://github.com/paranext/paranext-multi-extension-template/blob/main/.gitignore
+
 # Logs
 logs
 *.log
@@ -9,8 +11,12 @@ lerna-debug.log*
 
 node_modules
 dist
+release
 dist-ssr
 *.local
+
+# formatting and linting
+.eslintcache
 
 # Editor directories and files
 .idea
@@ -21,5 +27,7 @@ dist-ssr
 *.sln
 *.sw?
 
-# Vite-built temp WebView files
-temp-vite
+# Temporary intermediate build files
+temp-build
+
+# #endregion

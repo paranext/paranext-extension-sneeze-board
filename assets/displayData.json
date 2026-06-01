@@ -1,0 +1,12 @@
+{
+  "icon": "",
+  "moreInfoUrl": "",
+  "supportUrl": "",
+  "localizedDisplayInfo": {
+    "en": {
+      "displayName": "Sneeze Board",
+      "shortSummary": "A Platform.Bible client for the SIL Sneeze Board.",
+      "description": "assets/descriptions/description-en.md"
+    }
+  }
+}

@@ -1,0 +1,222 @@
+.sneeze-board {
+  // Cover the whole WebView panel so the background fills any space below our
+  // content, otherwise the host's white shows through under the dark theme.
+  min-height: 100vh;
+  // Bind to platform theme tokens so light/dark/paratext-* themes all work
+  // without our children (Input, Label, etc.) inheriting browser defaults.
+  background: var(--background);
+  color: var(--foreground);
+  padding: 16px;
+  font-family: system-ui, sans-serif;
+}
+
+// Vaul (the underlying library for Drawer) wraps the Drawer's children in a
+// flex column with `flex-1` but only `min-w-0` (no `min-h-0`). In CSS flex,
+// the implicit `min-height: auto` prevents the child from shrinking below
+// its content size — so an inner `flex-1 overflow-auto` div has nothing to
+// shrink into, and the whole thing overflows the viewport without scrolling.
+// Forcing `min-height: 0` on direct children of `[data-slot="drawer-content"]`
+// unblocks the shrink → our middle div can scroll.
+[data-slot='drawer-content'] > div {
+  min-height: 0;
+}
+
+// Inline compact-mode stats — fills the WebView when it is too small for a Dialog.
+// We don't add our own scroll container here; the WebView panel that hosts us
+// already scrolls. Adding overflow: auto here would produce a nested scrollbar.
+.sneeze-board--compact-stats {
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+}
+
+.sneeze-board__compact-stats-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border, #ccc);
+  position: sticky;
+  top: 0;
+  background: var(--background, #fff);
+  z-index: 1;
+}
+
+.sneeze-board__compact-stats-body {
+  flex: 1;
+  min-height: 0;
+}
+
+.sneeze-board__connection-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.sneeze-board__connection-row,
+.sneeze-board__user-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+// Push the auto-connect switch to the right edge of the connection row.
+.sneeze-board__autoconnect-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.sneeze-board__grid-placeholder {
+  height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--border);
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+// Apocalypse line and Stats button on the same row, Stats right-aligned.
+.sneeze-board__apocalypse-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.sneeze-board__apocalypse-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.sneeze-board__swatch {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+
+// "Change color" pattern: the visible swatch is a <label> wrapping a
+// position:absolute hidden <input type="color">. Clicking either the swatch or
+// the secondary button opens the native color picker via input.click().
+.sneeze-board__color-swatch-label {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.sneeze-board__color-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: 0;
+  padding: 0;
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.sneeze-board__color-input--visible {
+  position: static;
+  width: 32px;
+  height: 24px;
+  opacity: 1;
+}
+
+.sneeze-board__add-user-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sneeze-board__add-user-error {
+  color: #dc2626; // red-600
+  font-size: 0.85em;
+  white-space: nowrap;
+
+  .dark & {
+    color: #f87171; // red-400
+  }
+}
+
+.sneeze-board__status {
+  font-size: 0.9em;
+  color: var(--muted-foreground);
+}
+
+// Semantic status colors: keep saturated hues so they read in both themes,
+// but pick light/dark variants so contrast stays comfortable.
+.sneeze-board__status--connecting {
+  color: #3b82f6; // blue-500 — readable on both bg's
+
+  .dark & {
+    color: #60a5fa; // blue-400
+  }
+}
+
+.sneeze-board__status--open {
+  color: #16a34a; // green-600
+  font-weight: 600;
+
+  .dark & {
+    color: #4ade80; // green-400
+  }
+}
+
+.sneeze-board__status--closed,
+.sneeze-board__status--error {
+  color: #dc2626; // red-600
+
+  .dark & {
+    color: #f87171; // red-400
+  }
+}
+
+// Soft destructive banner that reads in both themes without needing
+// theme-specific overrides — uses the destructive token blended into bg.
+.sneeze-board__error {
+  background: color-mix(in oklab, var(--destructive) 15%, var(--background));
+  color: var(--destructive);
+  border: 1px solid color-mix(in oklab, var(--destructive) 40%, var(--background));
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 0.95em;
+
+  // In dark mode the destructive token is darker (oklch ~0.4) and gets lost
+  // against the dark bg; brighten the text and tint the bg slightly.
+  .dark & {
+    color: #f87171; // red-400
+    background: color-mix(in oklab, #ef4444 20%, var(--background));
+    border-color: color-mix(in oklab, #ef4444 50%, var(--background));
+  }
+}
+
+.sneeze-grid {
+  overflow-x: auto;
+  overflow-y: hidden;
+  width: 100%;
+  height: 60vh;
+  border: 1px solid var(--border);
+}
+
+.sneeze-grid__cell {
+  position: absolute;
+  font-family: monospace;
+  padding: 0 2px;
+  cursor: default;
+}
+
+.sneeze-grid__cell.has-comment {
+  outline: 1px solid goldenrod;
+}
