@@ -86,11 +86,14 @@ export function UserBar({
   return (
     <div className="sneeze-board__user-bar">
       <Select
-        value={currentUserId ?? ''}
+        // Use the matched user's id (or '') so a stale lastSneezerId that
+        // doesn't exist in the current database falls back to the placeholder
+        // instead of rendering as an empty trigger.
+        value={currentUser?.userId ?? ''}
         onValueChange={(v) => papi.commands.sendCommand('sneezeBoard.setCurrentUser', v)}
       >
-        <SelectTrigger>
-          <SelectValue placeholder="Select user" />
+        <SelectTrigger className="tw:min-w-44">
+          <SelectValue placeholder="Choose user to sneeze as…" />
         </SelectTrigger>
         <SelectContent>
           {users.map((u) => (
