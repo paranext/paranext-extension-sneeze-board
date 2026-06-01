@@ -2,6 +2,8 @@
 
 A Platform.Bible extension that connects to the SIL Sneeze Board server.
 
+WARNING: This extension is entirely AI-generated with essentially zero code oversight. There may be lots of less-than-best practices and examples you do not want to follow.
+
 ## Architecture
 
 The extension uses three artifacts that work together:
