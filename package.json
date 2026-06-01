@@ -1,7 +1,7 @@
 {
   "name": "paranext-extension-sneeze-board",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0-alpha.0",
   "main": "src/main.js",
   "types": "src/types/paranext-extension-sneeze-board.d.ts",
   "author": "tjcouch-sil",
