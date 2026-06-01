@@ -1,4 +1,11 @@
 .sneeze-board {
+  // Cover the whole WebView panel so the background fills any space below our
+  // content, otherwise the host's white shows through under the dark theme.
+  min-height: 100vh;
+  // Bind to platform theme tokens so light/dark/paratext-* themes all work
+  // without our children (Input, Label, etc.) inheriting browser defaults.
+  background: var(--background);
+  color: var(--foreground);
   padding: 16px;
   font-family: system-ui, sans-serif;
 }
@@ -69,8 +76,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px dashed var(--border, #ccc);
-  color: #888;
+  border: 1px dashed var(--border);
+  color: var(--muted-foreground);
   font-style: italic;
 }
 
@@ -91,7 +98,7 @@
   display: inline-block;
   width: 18px;
   height: 18px;
-  border: 1px solid #888;
+  border: 1px solid var(--border);
   border-radius: 3px;
 }
 
@@ -134,37 +141,65 @@
 }
 
 .sneeze-board__add-user-error {
-  color: #dc2626;
+  color: #dc2626; // red-600
   font-size: 0.85em;
   white-space: nowrap;
+
+  .dark & {
+    color: #f87171; // red-400
+  }
 }
 
 .sneeze-board__status {
   font-size: 0.9em;
-  color: #555;
+  color: var(--muted-foreground);
 }
 
+// Semantic status colors: keep saturated hues so they read in both themes,
+// but pick light/dark variants so contrast stays comfortable.
 .sneeze-board__status--connecting {
-  color: #2563eb;
+  color: #3b82f6; // blue-500 — readable on both bg's
+
+  .dark & {
+    color: #60a5fa; // blue-400
+  }
 }
 
 .sneeze-board__status--open {
-  color: #16a34a;
+  color: #16a34a; // green-600
   font-weight: 600;
+
+  .dark & {
+    color: #4ade80; // green-400
+  }
 }
 
 .sneeze-board__status--closed,
 .sneeze-board__status--error {
-  color: #dc2626;
+  color: #dc2626; // red-600
+
+  .dark & {
+    color: #f87171; // red-400
+  }
 }
 
+// Soft destructive banner that reads in both themes without needing
+// theme-specific overrides — uses the destructive token blended into bg.
 .sneeze-board__error {
-  background: #fee2e2;
-  color: #991b1b;
-  border: 1px solid #fca5a5;
+  background: color-mix(in oklab, var(--destructive) 15%, var(--background));
+  color: var(--destructive);
+  border: 1px solid color-mix(in oklab, var(--destructive) 40%, var(--background));
   border-radius: 4px;
   padding: 6px 10px;
   font-size: 0.95em;
+
+  // In dark mode the destructive token is darker (oklch ~0.4) and gets lost
+  // against the dark bg; brighten the text and tint the bg slightly.
+  .dark & {
+    color: #f87171; // red-400
+    background: color-mix(in oklab, #ef4444 20%, var(--background));
+    border-color: color-mix(in oklab, #ef4444 50%, var(--background));
+  }
 }
 
 .sneeze-grid {
@@ -172,7 +207,7 @@
   overflow-y: hidden;
   width: 100%;
   height: 60vh;
-  border: 1px solid var(--border, #ccc);
+  border: 1px solid var(--border);
 }
 
 .sneeze-grid__cell {

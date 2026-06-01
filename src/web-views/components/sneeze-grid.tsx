@@ -130,7 +130,9 @@ export function SneezeGrid({
           const col = Math.floor(i / rowsPerColumn);
           const row = i % rowsPerColumn;
           const sneezeNum = database.countdownStart - i;
-          const color = userColor.get(s.userId) ?? '#000';
+          // Fall back to the theme foreground so orphaned sneezes (whose user
+          // is missing from the database) still render in dark mode.
+          const color = userColor.get(s.userId) ?? 'var(--foreground)';
           const title = (() => {
             const name = userName.get(s.userId) ?? 'Unknown';
             const localDate = new Date(s.date).toLocaleString();

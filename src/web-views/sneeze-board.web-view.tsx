@@ -118,7 +118,9 @@ function SneezeBoardWebView() {
         <SneezeGrid
           database={state.database}
           fontSize={14}
-          backgroundColor="#FFF"
+          // Use the platform theme background so the grid blends with the
+          // surrounding panel in dark mode (no more white block).
+          backgroundColor="var(--background)"
           currentUserId={state.currentUserId}
           onEditSneeze={startEdit}
           onRemoveSneeze={(s) => setRemoveTarget(s)}

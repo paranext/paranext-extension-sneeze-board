@@ -163,7 +163,11 @@ export function StatsView({ database }: { database: SneezeDatabase }) {
                   interval={0}
                 />
                 <Tooltip
-                  cursor={{ fill: 'rgba(0,0,0,0.04)' }}
+                  // Mid-gray at low alpha so the hover cursor is visible in
+                  // both light and dark themes (the previous black-on-black
+                  // disappeared in dark mode). Recharts passes this to an
+                  // SVG fill, so it has to be a literal color, not a CSS var.
+                  cursor={{ fill: 'rgba(128,128,128,0.15)' }}
                   formatter={(value: number) => [value, 'Sneezes in a row']}
                 />
                 <Bar dataKey="length" radius={[0, 4, 4, 0]}>
