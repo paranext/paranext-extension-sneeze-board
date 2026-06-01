@@ -68,6 +68,9 @@ export function ConnectionBar({
     <Input
       value={ip}
       onChange={(e) => setIp(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' && !isConnecting && ip.trim()) connect();
+      }}
       placeholder="Server IP (e.g. 127.0.0.1)"
       disabled={ipFieldDisabled}
     />
