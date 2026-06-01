@@ -93,7 +93,7 @@ export function UserBar({
         onValueChange={(v) => papi.commands.sendCommand('sneezeBoard.setCurrentUser', v)}
       >
         <SelectTrigger className="tw:min-w-44">
-          <SelectValue placeholder="Choose user to sneeze as…" />
+          <SelectValue placeholder="Select user" />
         </SelectTrigger>
         <SelectContent>
           {users.map((u) => (
