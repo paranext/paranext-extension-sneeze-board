@@ -14,7 +14,7 @@ import configBase, { rootDir } from './webpack.config.base';
  */
 const configBridge: webpack.Configuration = merge(configBase, {
   name: 'bridge',
-  target: 'node22',
+  target: 'node24',
   entry: path.join(rootDir, 'src/bridge/index.ts'),
   output: {
     path: path.join(rootDir, 'dist/assets/bridge'),

@@ -7,6 +7,8 @@
   "author": "tjcouch-sil",
   "license": "MIT",
   "scripts": {
+    "prebuild": "ts-node ./webpack/notices-build-id.ts",
+    "prebuild:production": "ts-node ./webpack/notices-build-id.ts",
     "build:web-view": "webpack --config ./webpack/webpack.config.web-view.ts",
     "build:main": "webpack --config ./webpack/webpack.config.main.ts",
     "build:bridge": "webpack --config ./webpack/webpack.config.bridge.ts",
@@ -37,7 +39,7 @@
     "react-dom": ">=19.0.0"
   },
   "dependencies": {
-    "@sillsdev/scripture": "^2.0.5",
+    "@sillsdev/scripture": "^2.1.0",
     "platform-bible-utils": "file:../paranext-core/lib/platform-bible-utils",
     "recharts": "^2.15.4"
   },
@@ -48,7 +50,7 @@
     "@swc/core": "1.13.3",
     "@tailwindcss/postcss": "^4.0.0",
     "@tailwindcss/typography": "^0.5.16",
-    "@types/node": "^22.19.13",
+    "@types/node": "^24.19.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@types/webpack": "^5.28.5",
@@ -88,6 +90,7 @@
     "stylelint-config-sass-guidelines": "^12.1.0",
     "swc-loader": "^0.2.6",
     "tailwindcss": "^4.0.0",
+    "terser-webpack-plugin": "^5.3.11",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "tsconfig-paths-webpack-plugin": "^4.2.0",
@@ -105,6 +108,6 @@
     }
   },
   "volta": {
-    "node": "22.22.0"
+    "node": "24.22.2"
   }
 }
